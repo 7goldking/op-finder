@@ -31,7 +31,7 @@ create trigger on_auth_user_created after insert on auth.users for each row exec
 
 -- ОРГАНИЗАЦИИ
 create table if not exists public.organizations (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null, description text default '', city text default '',
   website text default '', logo_url text default '',
   contact_email text, owner_email text, social_links jsonb default '[]',
@@ -40,7 +40,7 @@ create table if not exists public.organizations (
 
 -- СОБЫТИЯ
 create table if not exists public.events (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null, short_description text default '', description text default '',
   cover_image_url text default '', category text default '',
   format text default 'online', city text default '',
@@ -54,7 +54,7 @@ create table if not exists public.events (
 
 -- ЗАЯВКИ
 create table if not exists public.applications (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   event_id uuid references public.events(id) on delete cascade,
   user_email text, user_name text, user_city text, user_education text,
   status text default 'pending', answers jsonb default '{}', cv_url text,
@@ -63,7 +63,7 @@ create table if not exists public.applications (
 
 -- МЕНТОРЫ
 create table if not exists public.mentors (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null, headline text default '', bio text default '',
   avatar_url text default '', city text default '',
   expertise text[] default '{}', price_per_hour integer default 0,
@@ -73,7 +73,7 @@ create table if not exists public.mentors (
 
 -- ОТЗЫВЫ О МЕНТОРАХ
 create table if not exists public.mentor_reviews (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   mentor_id uuid references public.mentors(id) on delete cascade,
   author_email text, author_name text, rating integer, text text default '',
   created_at timestamptz default now()
@@ -81,7 +81,7 @@ create table if not exists public.mentor_reviews (
 
 -- ЗАПРОСЫ НА МЕНТОРСТВО
 create table if not exists public.mentorship_requests (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   mentor_id uuid references public.mentors(id) on delete cascade,
   student_email text, student_name text, topic text default '',
   message text default '', status text default 'pending',
@@ -90,7 +90,7 @@ create table if not exists public.mentorship_requests (
 
 -- СТАТЬИ
 create table if not exists public.articles (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null, content text default '', cover_url text default '',
   author_email text, author_name text, status text default 'draft',
   tags text[] default '{}', views_count integer default 0,
@@ -99,7 +99,7 @@ create table if not exists public.articles (
 
 -- КОМАНДЫ
 create table if not exists public.teams (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   event_id uuid references public.events(id) on delete cascade,
   name text not null, description text default '', status text default 'open',
   members jsonb default '[]', created_by text, created_at timestamptz default now()
@@ -107,7 +107,7 @@ create table if not exists public.teams (
 
 -- ПРОЕКТЫ
 create table if not exists public.projects (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null, description text default '', url text default '',
   image_url text default '', tags text[] default '{}',
   created_by text, created_at timestamptz default now()
@@ -115,7 +115,7 @@ create table if not exists public.projects (
 
 -- ЗАКЛАДКИ
 create table if not exists public.bookmarks (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   event_id uuid references public.events(id) on delete cascade,
   user_email text, created_at timestamptz default now(),
   unique(event_id, user_email)
@@ -123,7 +123,7 @@ create table if not exists public.bookmarks (
 
 -- ОТЗЫВЫ О СОБЫТИЯХ
 create table if not exists public.reviews (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   event_id uuid references public.events(id) on delete cascade,
   author_email text, author_name text, rating integer, text text default '',
   helpful_count integer default 0, helpful_by text[] default '{}',
@@ -132,7 +132,7 @@ create table if not exists public.reviews (
 
 -- ЧАТЫ
 create table if not exists public.conversations (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   participant_a text not null, participant_b text not null,
   participants text[] default '{}', participant_names jsonb default '{}',
   participant_avatars jsonb default '{}', last_message text default '',
@@ -141,7 +141,7 @@ create table if not exists public.conversations (
 );
 
 create table if not exists public.messages (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   conversation_id uuid references public.conversations(id) on delete cascade,
   sender_email text, sender_name text, text text default '',
   created_at timestamptz default now()
@@ -149,13 +149,13 @@ create table if not exists public.messages (
 
 -- ГРУППОВЫЕ ЧАТЫ
 create table if not exists public.group_chats (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null, description text default '',
   created_by text, members text[] default '{}', created_at timestamptz default now()
 );
 
 create table if not exists public.group_messages (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   group_id uuid references public.group_chats(id) on delete cascade,
   sender_email text, sender_name text, text text default '',
   created_at timestamptz default now()
@@ -163,7 +163,7 @@ create table if not exists public.group_messages (
 
 -- УВЕДОМЛЕНИЯ
 create table if not exists public.notifications (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_email text, title text default '', message text default '',
   type text default 'info', link text default '', read boolean default false,
   created_at timestamptz default now()
@@ -171,7 +171,7 @@ create table if not exists public.notifications (
 
 -- ЛЕНТА
 create table if not exists public.activity_feed (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   for_email text, type text default '', title text default '',
   description text default '', link text default '',
   created_at timestamptz default now()
@@ -179,14 +179,14 @@ create table if not exists public.activity_feed (
 
 -- ДРУЗЬЯ
 create table if not exists public.friend_requests (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   from_email text, to_email text, status text default 'pending',
   created_at timestamptz default now(), unique(from_email, to_email)
 );
 
 -- РЕФЕРАЛЫ
 create table if not exists public.referrals (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   referrer_email text, referred_email text, code text,
   created_at timestamptz default now()
 );
