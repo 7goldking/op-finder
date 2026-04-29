@@ -37,6 +37,8 @@ import FriendRequests from '@/pages/FriendRequests';
 import ActivityFeed from '@/pages/ActivityFeed';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
+import OrgBrandPage from '@/pages/OrgBrandPage';
+import OrgEmbed from '@/pages/OrgEmbed';
 
 const AuthenticatedApp = () => {
   useTheme();
@@ -63,8 +65,10 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/embed/org/:slug" element={<OrgEmbed />} />
       <Route path="/" element={<Landing />} />
       <Route element={<Layout />}>
+        <Route path="/o/:slug" element={<PageTransition><OrgBrandPage /></PageTransition>} />
         <Route path="/home" element={<PageTransition><Home /></PageTransition>} />
         <Route path="/catalog" element={<PageTransition><Catalog /></PageTransition>} />
         <Route path="/event/:id" element={<PageTransition><EventDetail /></PageTransition>} />

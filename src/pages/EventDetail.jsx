@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, MapPin, Users, Globe, BadgeCheck, Bookmark, Share2, ExternalLink, Sparkles } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Globe, Bookmark, Share2, ExternalLink, Sparkles } from 'lucide-react';
+import VerifiedBadge from '@/components/VerifiedBadge';
 import EventReviews from '@/components/EventReviews';
 import AddToCalendar from '@/components/AddToCalendar';
 import PushNotificationsToggle from '@/components/PushNotificationsToggle';
@@ -138,8 +139,17 @@ export default function EventDetail() {
               {translating && <Loader2 className="w-5 h-5 mt-2 animate-spin text-muted-foreground shrink-0" />}
             </h1>
             <div className="flex items-center gap-2 text-muted-foreground">
-              <span>{event.organization_name}</span>
-              {event.organization_verified && <BadgeCheck className="w-4 h-4 text-primary" />}
+              {event.organization_id ? (
+                <Link
+                  to={`/org/${event.organization_id}`}
+                  className="hover:underline underline-offset-4"
+                >
+                  {event.organization_name}
+                </Link>
+              ) : (
+                <span>{event.organization_name}</span>
+              )}
+              {event.organization_verified && <VerifiedBadge size="md" />}
             </div>
           </div>
 

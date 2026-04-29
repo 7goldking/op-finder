@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, BadgeCheck } from 'lucide-react';
+import { MapPin, Clock } from 'lucide-react';
+import VerifiedBadge from '@/components/VerifiedBadge';
 import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { getCategory, daysUntil, getFormats } from '@/lib/categories';
@@ -54,7 +55,7 @@ export default function EventCard({ event, index = 0 }) {
           <div className="p-5">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
               <span className="truncate">{event.organization_name}</span>
-              {event.organization_verified && <BadgeCheck className="w-3.5 h-3.5 text-primary shrink-0" />}
+              {event.organization_verified && <VerifiedBadge size="sm" />}
             </div>
 
             <h3 className="font-display text-lg font-semibold leading-snug text-balance mb-3 line-clamp-2 group-hover:underline underline-offset-4 decoration-1">

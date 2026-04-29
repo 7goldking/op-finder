@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
+import VerifiedBadge from '@/components/VerifiedBadge';
 
 export default function OrgMarquee({ label }) {
   const [orgs, setOrgs] = useState([]);
@@ -25,9 +27,10 @@ export default function OrgMarquee({ label }) {
       >
         <InfiniteSlider gap={24} duration={40} durationOnHover={100}>
           {orgs.map((org) => (
-            <div
+            <Link
               key={org.id}
-              className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl border border-border bg-card shrink-0 hover:border-foreground/20 transition-colors cursor-default"
+              to={`/org/${org.slug || org.id}`}
+              className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl border border-border bg-card shrink-0 hover:border-foreground/20 transition-colors"
             >
               {org.logo_url ? (
                 <img src={org.logo_url} alt={org.name} className="w-8 h-8 rounded-lg object-cover" />
@@ -37,10 +40,8 @@ export default function OrgMarquee({ label }) {
                 </div>
               )}
               <span className="text-sm font-medium whitespace-nowrap">{org.name}</span>
-              {org.verified && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-medium">✓</span>
-              )}
-            </div>
+              {org.verified && <VerifiedBadge size="sm" />}
+            </Link>
           ))}
         </InfiniteSlider>
       </div>
