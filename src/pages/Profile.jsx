@@ -11,6 +11,7 @@ import { AvatarPicker } from '@/components/ui/avatar-picker';
 import { generateUserID } from '@/lib/user-id';
 import { Switch } from '@/components/ui/switch';
 import SocialLinksEditor from '@/components/SocialLinksEditor';
+import TelegramConnect from '@/components/TelegramConnect';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -27,7 +28,7 @@ export default function Profile() {
   const EDU = EDU_KEYS.map(v => ({ value: v, label: t(`edu.${v}`) }));
   const [form, setForm] = useState({
     bio: '', city: '', age: '', education_level: '', education_place: '',
-    interests: [], skills: [], goals: '', avatar_url: '', email_digest_enabled: true,
+    interests: [], skills: [], goals: '', avatar_url: '', digest_subscribed: true,
     social_links: [], ai_system_prompt: '',
   });
   const [tagDraft, setTagDraft] = useState('');
@@ -48,7 +49,7 @@ export default function Profile() {
         skills: user.skills || [],
         goals: user.goals || '',
         avatar_url: user.avatar_url || '',
-        email_digest_enabled: user.email_digest_enabled !== false,
+        digest_subscribed: user.digest_subscribed !== false,
         social_links: user.social_links || [],
         ai_system_prompt: user.ai_system_prompt || '',
       });
@@ -389,23 +390,27 @@ export default function Profile() {
           </Field>
         )}
 
-        {/* Email digest */}
-        <div className="p-5 rounded-2xl border border-border bg-card">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex gap-3">
-              <Mail className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <div className="font-medium">{t('profile.digest_title')}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {t('profile.digest_desc')}
+        {/* Notifications */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t('settings.notifications')}</h3>
+
+          <div className="p-5 rounded-2xl border border-border bg-card">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex gap-3">
+                <Mail className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <div className="font-medium">{t('settings.email_digest')}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{t('settings.email_digest_desc')}</div>
                 </div>
               </div>
+              <Switch
+                checked={form.digest_subscribed}
+                onCheckedChange={v => setForm({ ...form, digest_subscribed: v })}
+              />
             </div>
-            <Switch
-              checked={form.email_digest_enabled}
-              onCheckedChange={v => setForm({ ...form, email_digest_enabled: v })}
-            />
           </div>
+
+          <TelegramConnect user={user} setUser={setUser} />
         </div>
 
         <div className="flex justify-end pt-2">

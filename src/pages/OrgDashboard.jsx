@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Plus, Eye, FileText, TrendingUp, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Eye, FileText, TrendingUp, Pencil, Trash2, ExternalLink, Code2, Copy } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -82,6 +82,58 @@ export default function OrgDashboard() {
           <Plus className="w-4 h-4" /> Создать событие
         </Button>
       </div>
+
+      {/* Brand page + embed */}
+      {org && (
+        <div className="mb-10 p-6 rounded-2xl border border-border bg-card">
+          <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
+            <div>
+              <h2 className="font-display text-xl font-semibold">Публичная страница</h2>
+              <p className="text-sm text-muted-foreground">Делитесь ссылкой или вставьте виджет на свой сайт</p>
+            </div>
+            <Link to={`/o/${org.slug || org.id}`} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="rounded-full gap-2"><ExternalLink className="w-4 h-4" />Открыть страницу</Button>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="p-4 rounded-xl bg-secondary">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Ссылка</div>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 truncate text-xs font-mono">{`${typeof window !== 'undefined' ? window.location.origin : ''}/o/${org.slug || org.id}`}</code>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full h-8 w-8 shrink-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/o/${org.slug || org.id}`);
+                    toast.success('Ссылка скопирована');
+                  }}
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 rounded-xl bg-secondary">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5"><Code2 className="w-3 h-3" /> Embed</div>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 truncate text-xs font-mono">{`<iframe src="${typeof window !== 'undefined' ? window.location.origin : ''}/embed/org/${org.slug || org.id}" ...`}</code>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full h-8 w-8 shrink-0"
+                  onClick={() => {
+                    const code = `<iframe src="${window.location.origin}/embed/org/${org.slug || org.id}" style="width:100%;min-height:520px;border:0;border-radius:16px" loading="lazy" title="${org.name} — Op Finder"></iframe>`;
+                    navigator.clipboard.writeText(code);
+                    toast.success('Код виджета скопирован');
+                  }}
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
