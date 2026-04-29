@@ -27,7 +27,7 @@ export default function Profile() {
   const { t } = useI18n();
   const EDU = EDU_KEYS.map(v => ({ value: v, label: t(`edu.${v}`) }));
   const [form, setForm] = useState({
-    bio: '', city: '', age: '', education_level: '', education_place: '',
+    full_name: '', bio: '', city: '', age: '', education_level: '', education_place: '',
     interests: [], skills: [], goals: '', avatar_url: '', digest_subscribed: true,
     social_links: [], ai_system_prompt: '',
   });
@@ -40,6 +40,7 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setForm({
+        full_name: user.full_name || '',
         bio: user.bio || '',
         city: user.city || '',
         age: user.age || '',
@@ -209,9 +210,15 @@ export default function Profile() {
                <span className="text-primary">{(user?.full_name || '?')[0].toUpperCase()}</span>
              )}
            </div>
-           <div className="flex-1">
-             <div className="text-2xl font-semibold">{user?.full_name}</div>
-             <div className="text-sm text-muted-foreground">{user?.email}</div>
+           <div className="flex-1 min-w-0">
+             <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">{t('profile.full_name')}</Label>
+             <Input
+               value={form.full_name}
+               onChange={e => setForm({ ...form, full_name: e.target.value })}
+               placeholder={t('profile.full_name_ph')}
+               className="h-11 text-lg font-semibold rounded-xl bg-secondary border-transparent"
+             />
+             <div className="text-sm text-muted-foreground mt-2 truncate">{user?.email}</div>
            </div>
          </div>
 

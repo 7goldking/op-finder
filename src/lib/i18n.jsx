@@ -116,6 +116,8 @@ const DICT = {
     // Profile
     'profile.title': 'Профиль',
     'profile.subtitle': 'Это помогает ИИ подбирать релевантные возможности',
+    'profile.full_name': 'Имя',
+    'profile.full_name_ph': 'Как тебя зовут',
     'profile.portfolio': 'Моё портфолио',
     'profile.portfolio_desc': 'Достижения и экспорт',
     'profile.upload_photo': 'Загрузить фото',
@@ -502,6 +504,8 @@ const DICT = {
 
     // Profile
     'profile.title': 'Profile',
+    'profile.full_name': 'Name',
+    'profile.full_name_ph': 'Your name',
     'profile.subtitle': 'Helps AI pick relevant opportunities for you',
     'profile.portfolio': 'My portfolio',
     'profile.portfolio_desc': 'Achievements & export',
@@ -874,6 +878,8 @@ const DICT = {
     'apply.cancel': 'Болдырмау',
     'apply.loading': 'Загрузка жүріп жатыр...',
     'profile.title': 'Профиль',
+    'profile.full_name': 'Аты',
+    'profile.full_name_ph': 'Сенің атың',
     'profile.subtitle': 'Бұл ИИ-ге релевантті мүмкіндіктерді таңдауға көмектеседі',
     'profile.portfolio': 'Менің портфолиом',
     'profile.portfolio_desc': 'Жетістіктер және экспорт',
