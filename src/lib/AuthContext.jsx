@@ -14,7 +14,19 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings] = useState({ public_settings: {} });
 
   useEffect(() => {
-    checkUserAuth();
+    // Hard safety net: never hang on auth init for more than 5s.
+    // If anything (network, stale token, slow Supabase) blocks getSession,
+    // we still let the app render as anonymous so the user isn't stuck on a spinner.
+    const watchdog = setTimeout(() => {
+      setIsLoadingAuth(prev => {
+        if (prev) {
+          setAuthChecked(true);
+          return false;
+        }
+        return prev;
+      });
+    }, 5000);
+    checkUserAuth().finally(() => clearTimeout(watchdog));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setUser(null); setIsAuthenticated(false);
@@ -23,25 +35,32 @@ export const AuthProvider = ({ children }) => {
         await loadProfile(session.user);
       }
     });
-    return () => subscription.unsubscribe();
+    return () => { clearTimeout(watchdog); subscription.unsubscribe(); };
   }, []);
+
+  const withTimeout = (p, ms = 4000) => Promise.race([
+    p,
+    new Promise((_, rej) => setTimeout(() => rej(new Error('auth-timeout')), ms)),
+  ]);
 
   const loadProfile = async (supabaseUser) => {
     try {
-      let profile = await auth.me();
+      let profile = await withTimeout(auth.me());
       if (!profile) {
-        await supabase.from('profiles').upsert({
+        await withTimeout(supabase.from('profiles').upsert({
           id: supabaseUser.id,
           email: supabaseUser.email,
           full_name: supabaseUser.user_metadata?.full_name || '',
           avatar_url: supabaseUser.user_metadata?.avatar_url || '',
-        }, { onConflict: 'id' });
-        profile = await auth.me();
+        }, { onConflict: 'id' }));
+        profile = await withTimeout(auth.me());
       }
       setUser(profile);
-      setIsAuthenticated(true);
+      setIsAuthenticated(!!profile);
     } catch (e) {
-      setAuthError({ type: 'unknown', message: e.message });
+      // Don't block the app on auth errors — just render as anonymous.
+      console.warn('[auth] loadProfile failed:', e?.message);
+      setIsAuthenticated(false);
     } finally {
       setIsLoadingAuth(false);
       setAuthChecked(true);
@@ -51,10 +70,17 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     setIsLoadingAuth(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await withTimeout(supabase.auth.getSession());
       if (session?.user) await loadProfile(session.user);
       else { setIsAuthenticated(false); setIsLoadingAuth(false); setAuthChecked(true); }
-    } catch { setIsLoadingAuth(false); setAuthChecked(true); }
+    } catch (e) {
+      console.warn('[auth] getSession failed, rendering as anonymous:', e?.message);
+      // Clear potentially corrupt tokens so subsequent requests don't keep hanging.
+      try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
+      setIsAuthenticated(false);
+      setIsLoadingAuth(false);
+      setAuthChecked(true);
+    }
   };
 
   const logout = async (redirectTo) => {
