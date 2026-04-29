@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { I18nProvider } from '@/lib/i18n';
+import AutoTranslator from '@/components/AutoTranslator';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import Layout from '@/components/Layout';
@@ -106,6 +107,7 @@ function App() {
   return (
     <AuthProvider>
       <I18nProvider>
+        <AutoTranslator />
         <QueryClientProvider client={queryClientInstance}>
           <Router>
             <AuthenticatedApp />
