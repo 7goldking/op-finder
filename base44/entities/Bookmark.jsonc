@@ -1,0 +1,25 @@
+{
+  "name": "Bookmark",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "event_title": {
+      "type": "string"
+    },
+    "event_cover_url": {
+      "type": "string"
+    },
+    "event_deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_category": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id"
+  ]
+}

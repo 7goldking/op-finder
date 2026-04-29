@@ -1,0 +1,62 @@
+{
+  "name": "ActivityFeed",
+  "type": "object",
+  "properties": {
+    "actor_email": {
+      "type": "string",
+      "description": "Email \u0430\u0432\u0442\u043e\u0440\u0430 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0441\u0442\u0438"
+    },
+    "actor_name": {
+      "type": "string"
+    },
+    "actor_avatar_url": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "friend_request_accepted",
+        "new_event_application",
+        "new_mentor_session",
+        "new_article",
+        "friend_post"
+      ],
+      "description": "\u0422\u0438\u043f \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0441\u0442\u0438"
+    },
+    "title": {
+      "type": "string",
+      "description": "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0441\u0442\u0438"
+    },
+    "description": {
+      "type": "string"
+    },
+    "target_id": {
+      "type": "string",
+      "description": "ID \u0441\u043e\u0431\u044b\u0442\u0438\u044f/\u0441\u0442\u0430\u0442\u044c\u0438/\u0441\u0435\u0441\u0441\u0438\u0438"
+    },
+    "for_email": {
+      "type": "string",
+      "description": "\u0414\u043b\u044f \u043a\u043e\u0433\u043e \u044d\u0442\u0430 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0441\u0442\u044c (\u0434\u043b\u044f \u0444\u0438\u043b\u044c\u0442\u0440\u0430\u0446\u0438\u0438 \u0432 \u043b\u0435\u043d\u0442\u0435)"
+    }
+  },
+  "required": [
+    "actor_email",
+    "type",
+    "for_email"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "data.for_email": "{{user.email}}"
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

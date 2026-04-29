@@ -1,0 +1,50 @@
+{
+  "name": "MentorshipRequest",
+  "type": "object",
+  "properties": {
+    "mentor_id": {
+      "type": "string"
+    },
+    "mentor_name": {
+      "type": "string"
+    },
+    "mentor_email": {
+      "type": "string"
+    },
+    "student_name": {
+      "type": "string"
+    },
+    "student_email": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string",
+      "description": "\u0422\u0435\u043c\u0430 \u0441\u0435\u0441\u0441\u0438\u0438"
+    },
+    "message": {
+      "type": "string",
+      "description": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u043c\u0435\u043d\u0442\u043e\u0440\u0443"
+    },
+    "preferred_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed"
+      ],
+      "default": "pending"
+    },
+    "mentor_reply": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "mentor_id",
+    "topic"
+  ]
+}

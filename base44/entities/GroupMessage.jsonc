@@ -1,0 +1,27 @@
+{
+  "name": "GroupMessage",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string",
+      "description": "ID \u0433\u0440\u0443\u043f\u043f\u044b"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Email \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u0435\u043b\u044f"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "\u0418\u043c\u044f \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u0435\u043b\u044f"
+    },
+    "text": {
+      "type": "string",
+      "description": "\u0422\u0435\u043a\u0441\u0442 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f"
+    }
+  },
+  "required": [
+    "group_id",
+    "sender_email",
+    "text"
+  ]
+}

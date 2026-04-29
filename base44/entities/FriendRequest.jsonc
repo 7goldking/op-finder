@@ -1,0 +1,73 @@
+{
+  "name": "FriendRequest",
+  "type": "object",
+  "properties": {
+    "from_email": {
+      "type": "string",
+      "description": "Email \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u0435\u043b\u044f \u0437\u0430\u043f\u0440\u043e\u0441\u0430"
+    },
+    "from_name": {
+      "type": "string"
+    },
+    "to_email": {
+      "type": "string",
+      "description": "Email \u043f\u043e\u043b\u0443\u0447\u0430\u0442\u0435\u043b\u044f \u0437\u0430\u043f\u0440\u043e\u0441\u0430"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "message": {
+      "type": "string",
+      "description": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0441 \u0437\u0430\u043f\u0440\u043e\u0441\u043e\u043c"
+    }
+  },
+  "required": [
+    "from_email",
+    "to_email"
+  ],
+  "rls": {
+    "create": {
+      "data.from_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.from_email": "{{user.email}}"
+        },
+        {
+          "data.to_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.to_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.from_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

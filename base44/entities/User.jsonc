@@ -1,0 +1,107 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "subscription_plan": {
+      "type": "string",
+      "enum": [
+        "basic",
+        "pro",
+        "business"
+      ],
+      "default": "basic",
+      "description": "\u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u043b\u0430\u043d \u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438"
+    },
+    "subscription_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0410\u043a\u0442\u0438\u0432\u043d\u0430 \u043b\u0438 \u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0430"
+    },
+    "subscription_billing": {
+      "type": "string",
+      "enum": [
+        "month",
+        "year"
+      ],
+      "description": "\u041f\u0435\u0440\u0438\u043e\u0434 \u0431\u0438\u043b\u043b\u0438\u043d\u0433\u0430"
+    },
+    "subscription_id": {
+      "type": "string",
+      "description": "Stripe subscription ID"
+    },
+    "subscription_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "age": {
+      "type": "number"
+    },
+    "education_level": {
+      "type": "string"
+    },
+    "education_place": {
+      "type": "string"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "goals": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "email_digest_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "social_links": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "ai_system_prompt": {
+      "type": "string"
+    },
+    "friends": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "account_type": {
+      "type": "string",
+      "enum": [
+        "student",
+        "organization"
+      ]
+    },
+    "organization_id": {
+      "type": "string"
+    }
+  }
+}

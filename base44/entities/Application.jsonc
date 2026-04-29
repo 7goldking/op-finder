@@ -1,0 +1,81 @@
+{
+  "name": "Application",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "event_title": {
+      "type": "string"
+    },
+    "event_organization": {
+      "type": "string"
+    },
+    "event_cover_url": {
+      "type": "string"
+    },
+    "event_deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_category": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_city": {
+      "type": "string"
+    },
+    "user_education": {
+      "type": "string"
+    },
+    "answers": {
+      "type": "array",
+      "description": "\u041e\u0442\u0432\u0435\u0442\u044b \u043d\u0430 \u043f\u043e\u043b\u044f \u0430\u043d\u043a\u0435\u0442\u044b",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field_key": {
+            "type": "string"
+          },
+          "field_label": {
+            "type": "string"
+          },
+          "value_text": {
+            "type": "string"
+          },
+          "value_file_url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "in_review",
+        "accepted",
+        "rejected"
+      ],
+      "default": "submitted"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u0412\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u0437\u0430\u043c\u0435\u0442\u043a\u0438 \u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\u0438"
+    }
+  },
+  "required": [
+    "event_id",
+    "status"
+  ]
+}

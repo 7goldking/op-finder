@@ -1,0 +1,79 @@
+{
+  "name": "Article",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "cover_url": {
+      "type": "string"
+    },
+    "excerpt": {
+      "type": "string",
+      "description": "\u041a\u043e\u0440\u043e\u0442\u043a\u043e\u0435 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0434\u043b\u044f \u043a\u0430\u0440\u0442\u043e\u0447\u043a\u0438"
+    },
+    "content": {
+      "type": "string",
+      "description": "\u041f\u043e\u043b\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442 (markdown)"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "career",
+        "education",
+        "hackathons",
+        "internships",
+        "soft_skills",
+        "tech",
+        "other"
+      ],
+      "default": "career"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "author_email": {
+      "type": "string"
+    },
+    "author_type": {
+      "type": "string",
+      "enum": [
+        "expert",
+        "organization",
+        "admin"
+      ],
+      "default": "expert"
+    },
+    "author_avatar_url": {
+      "type": "string"
+    },
+    "read_time_min": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published"
+      ],
+      "default": "published"
+    },
+    "views_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "title",
+    "content"
+  ]
+}

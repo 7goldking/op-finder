@@ -1,0 +1,38 @@
+{
+  "name": "MentorReview",
+  "type": "object",
+  "properties": {
+    "mentor_id": {
+      "type": "string"
+    },
+    "mentor_name": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "ID MentorshipRequest (\u0435\u0441\u043b\u0438 \u043e\u0442\u0437\u044b\u0432 \u043f\u043e\u0441\u043b\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043d\u043d\u043e\u0439 \u0441\u0435\u0441\u0441\u0438\u0438)"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "text": {
+      "type": "string"
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "author_email": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string",
+      "description": "\u0422\u0435\u043c\u0430 \u0441\u0435\u0441\u0441\u0438\u0438, \u043f\u043e \u043a\u043e\u0442\u043e\u0440\u043e\u0439 \u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d \u043e\u0442\u0437\u044b\u0432"
+    }
+  },
+  "required": [
+    "mentor_id",
+    "rating"
+  ]
+}
