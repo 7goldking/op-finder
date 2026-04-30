@@ -158,15 +158,17 @@ serve(async (req) => {
 
       const { subject, html } = buildEmail(profile, picked);
       let ok = true;
+      let detail: any = null;
       if (!dry_run) {
         const r = await sendEmail(profile.email, subject, html);
         ok = r.ok;
+        detail = r.body;
         await supa.from('digest_log').insert({
           user_email: profile.email,
           events_count: picked.length,
         }).then(() => {}, () => {});
       }
-      sent.push({ email: profile.email, count: picked.length, ok });
+      sent.push({ email: profile.email, count: picked.length, ok, detail });
     }
 
     return new Response(JSON.stringify({ ok: true, sent: sent.length, events_in_window: events.length, results: sent.slice(0, 50) }), {
