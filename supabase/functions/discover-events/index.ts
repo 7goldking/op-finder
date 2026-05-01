@@ -60,19 +60,36 @@ async function fetchSource(url: string): Promise<string> {
 
 async function extractWithLlama(sourceName: string, sourceUrl: string, html: string): Promise<ExtractedEvent[]> {
   const today = new Date().toISOString().slice(0, 10);
-  const systemPrompt = `Ты ассистент, который извлекает события (хакатоны, гранты, стажировки, олимпиады, летние школы, конкурсы) для молодёжной платформы возможностей в Казахстане.
+  const systemPrompt = `Ты строгий ассистент-валидатор, который извлекает РЕАЛЬНЫЕ АКТУАЛЬНЫЕ возможности (хакатоны, гранты, стажировки, олимпиады, летние школы, конкурсы, стипендии) для молодёжной платформы Op Finder в Казахстане.
 
-Правила:
-1. Извлекай ТОЛЬКО реальные события с конкретными датами или дедлайнами.
-2. Сегодняшняя дата: ${today}. Игнорируй события, чей дедлайн уже прошёл.
-3. Категория обязательно одно из: ${VALID_CATEGORIES.join(', ')}.
-4. Если поле неизвестно — оставь пустым или null, не выдумывай.
-5. external_url — абсолютная ссылка на страницу события (если относительная — раскрой относительно ${sourceUrl}).
-6. confidence (0..1) — насколько ты уверен что это реальное актуальное событие.
-7. Пропускай рекламу, политику, новости общего характера, прошедшие события.
+Сегодня: ${today}
 
-Отвечай ТОЛЬКО валидным JSON-массивом без markdown:
-[{"title":"...", "short_description":"...", "description":"...", "category":"hackathon", "deadline":"2026-05-31", "start_date":"...", "end_date":"...", "city":"Almaty", "organization_name":"...", "tags":["AI","data"], "external_url":"https://...", "confidence":0.9}]`;
+КРИТЕРИИ ОТБОРА (все обязательны):
+1. Конкретное будущее событие с датой дедлайна или датой начала >= ${today}. Без точной даты — пропускай.
+2. Есть актуальный URL регистрации или страницы события (не главная новостной ленты, не просто категория).
+3. Actionable: пользователь может подать заявку / зарегистрироваться / узнать подробности.
+4. Категория строго одно из: ${VALID_CATEGORIES.join(', ')}.
+
+ЖЁСТКО ОТФИЛЬТРОВЫВАЙ:
+- Новости, пресс-релизы, итоги прошедших событий, фотоотчёты, интервью, статьи, колонки мнений
+- Прошедшие события (deadline или start_date в прошлом)
+- События с неопределёнными датами ("скоро", "в этом году", "следите за обновлениями")
+- Реклама услуг, курсов с постоянным набором, продукты компаний
+- Политический контент
+
+ПРАВИЛА ДАННЫХ:
+- Все даты в формате YYYY-MM-DD. Если в тексте нет точной даты — поле null/пусто.
+- external_url — АБСОЛЮТНАЯ ссылка на страницу события (разворачивай относительные от ${sourceUrl}). Не используй главные страницы сайта.
+- confidence (0..1): 
+  * 0.9-1.0 — конкретное событие с точной датой, URL, названием и описанием
+  * 0.7-0.9 — есть все поля, но формулировки расплывчатые
+  * 0.5-0.7 — есть сомнения насчёт актуальности
+  * <0.5 — НЕ ВКЛЮЧАЙ В ОТВЕТ
+- title: на языке оригинала, без кавычек и восклицательных знаков
+- short_description: 1 предложение, 80-180 символов
+
+Отвечай ТОЛЬКО валидным JSON-массивом без markdown. Если ничего не подходит — верни [].
+Формат: [{"title":"...", "short_description":"...", "description":"...", "category":"hackathon", "deadline":"2026-05-31", "start_date":"2026-06-15", "end_date":"2026-06-17", "city":"Almaty", "organization_name":"...", "tags":["AI","data"], "external_url":"https://...", "confidence":0.9}]`;
 
   const userPrompt = `Источник: ${sourceName} (${sourceUrl})
 
@@ -195,8 +212,19 @@ async function processSource(source: { id: string; name: string; url: string }) 
   try {
     html = await fetchSource(source.url);
     events = await extractWithLlama(source.name, source.url, html);
+    const todayStr = new Date().toISOString().slice(0, 10);
     for (const ev of events) {
-      if (ev.confidence < 0.4) { skipped++; continue; }
+      // Quality gate: confidence >= 0.7
+      if (ev.confidence < 0.7) { skipped++; continue; }
+      // Must have at least a deadline OR a start_date
+      if (!ev.deadline && !ev.start_date) { skipped++; continue; }
+      // Reject past events
+      if (ev.deadline && ev.deadline < todayStr) { skipped++; continue; }
+      if (!ev.deadline && ev.start_date && ev.start_date < todayStr) { skipped++; continue; }
+      // Must have a registration URL distinct from the source landing page
+      if (!ev.external_url || ev.external_url === source.url) { skipped++; continue; }
+      // Title quality: at least 8 chars, no "Breaking news" clickbait signals
+      if (!ev.title || ev.title.length < 8) { skipped++; continue; }
       if (await isDuplicate(ev)) { skipped++; continue; }
       const { error } = await supa.from('events').insert({
         title: ev.title,

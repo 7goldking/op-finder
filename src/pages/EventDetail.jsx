@@ -258,18 +258,42 @@ export default function EventDetail() {
               )}
             </div>
 
-            {hasApplied ? (
-              <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Application sent' : 'Заявка отправлена'}</Button>
-            ) : past ? (
-              <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Applications closed' : 'Подача закрыта'}</Button>
-            ) : (
-              <Button onClick={() => navigate(`/event/${id}/apply`)} className="w-full h-12 rounded-full gap-2">
-                {lang === 'en' ? 'Apply' : 'Подать заявку'}
-                {days !== null && days <= 7 && days >= 0 && (
-                  <span className="text-xs opacity-70">· {days === 0 ? (lang === 'en' ? 'today' : 'сегодня') : `${days} ${lang === 'en' ? 'd.' : 'дн.'}`}</span>
-                )}
-              </Button>
-            )}
+            {(() => {
+              // Event is "external" if it was discovered by AI OR has no linked verified organization.
+              // For external events we can't process applications internally — send user to the source.
+              const isExternal = event.discovery_source === 'ai-agent' || !event.organization_id;
+              if (hasApplied) {
+                return <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Application sent' : 'Заявка отправлена'}</Button>;
+              }
+              if (past) {
+                return <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Applications closed' : 'Подача закрыта'}</Button>;
+              }
+              if (isExternal) {
+                const href = event.external_url;
+                if (!href) {
+                  return <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Registration link missing' : 'Ссылка на регистрацию не указана'}</Button>;
+                }
+                return (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="block">
+                    <Button className="w-full h-12 rounded-full gap-2">
+                      <ExternalLink className="w-4 h-4" />
+                      {lang === 'en' ? 'Go to registration' : 'Перейти к регистрации'}
+                      {days !== null && days <= 7 && days >= 0 && (
+                        <span className="text-xs opacity-70">· {days === 0 ? (lang === 'en' ? 'today' : 'сегодня') : `${days} ${lang === 'en' ? 'd.' : 'дн.'}`}</span>
+                      )}
+                    </Button>
+                  </a>
+                );
+              }
+              return (
+                <Button onClick={() => navigate(`/event/${id}/apply`)} className="w-full h-12 rounded-full gap-2">
+                  {lang === 'en' ? 'Apply' : 'Подать заявку'}
+                  {days !== null && days <= 7 && days >= 0 && (
+                    <span className="text-xs opacity-70">· {days === 0 ? (lang === 'en' ? 'today' : 'сегодня') : `${days} ${lang === 'en' ? 'd.' : 'дн.'}`}</span>
+                  )}
+                </Button>
+              );
+            })()}
 
             <div className="grid grid-cols-2 gap-2 mt-3">
               <Button variant="outline" onClick={toggleBookmark} className="rounded-full gap-1.5">

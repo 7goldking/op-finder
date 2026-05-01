@@ -47,7 +47,12 @@ export default function Catalog() {
   }, [events]);
 
   const filtered = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
     return events.filter(e => {
+      // Hide expired events (belt-and-braces; daily cron also cleans them up in DB)
+      if (e.deadline && e.deadline < todayStr) return false;
+      // Hide AI-discovered events that lack a registration URL — they're unusable
+      if (e.discovery_source === 'ai-agent' && !e.external_url) return false;
       if (category !== 'all' && e.category !== category) return false;
       if (format !== 'all' && e.format !== format) return false;
       if (city !== 'all' && e.city !== city) return false;
