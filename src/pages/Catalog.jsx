@@ -15,7 +15,6 @@ export default function Catalog() {
   const [category, setCategory] = useState(params.get('category') || 'all');
   const [format, setFormat] = useState('all');
   const [city, setCity] = useState('all');
-  const [source, setSource] = useState('all'); // all | org | ai
 
   const fetchEvents = useCallback(() => {
     setLoading(true);
@@ -56,9 +55,7 @@ export default function Catalog() {
       if (category !== 'all' && e.category !== category) return false;
       if (format !== 'all' && e.format !== format) return false;
       if (city !== 'all' && e.city !== city) return false;
-      if (source === 'ai' && e.discovery_source !== 'ai-agent') return false;
-      if (source === 'verified' && !e.organization_verified) return false;
-      if (source === 'org' && e.discovery_source === 'ai-agent') return false;
+
       if (search) {
         const q = search.toLowerCase();
         const hay = [e.title, e.short_description, e.organization_name, (e.tags || []).join(' ')]
@@ -89,11 +86,6 @@ export default function Catalog() {
 
       <div className="flex items-center justify-between gap-4 mb-6 text-sm text-muted-foreground flex-wrap">
         <span>{loading ? t('catalog.loading') : `${t('catalog.found')}: ${filtered.length}`}</span>
-        <div className="flex items-center gap-1 rounded-full border border-border p-1 bg-card flex-wrap">
-          <button onClick={() => setSource('all')} className={`px-3 py-1 rounded-full text-xs font-medium transition ${source === 'all' ? 'bg-foreground text-background' : 'hover:bg-muted'}`}>{t('catalog.source_all')}</button>
-          <button onClick={() => setSource('verified')} className={`px-3 py-1 rounded-full text-xs font-medium transition flex items-center gap-1 ${source === 'verified' ? 'bg-emerald-600 text-white' : 'hover:bg-muted'}`}>🛡 {t('catalog.source_verified')}</button>
-          <button onClick={() => setSource('ai')} className={`px-3 py-1 rounded-full text-xs font-medium transition flex items-center gap-1 ${source === 'ai' ? 'bg-violet-600 text-white' : 'hover:bg-muted'}`}>🤖 {t('catalog.source_ai')}</button>
-        </div>
       </div>
 
       {loading ? (
