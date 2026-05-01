@@ -231,13 +231,22 @@ export default function Profile() {
          
          {/* Upload custom photo option */}
          <div className="p-4 rounded-xl border border-border bg-card">
-           <label className="flex items-center gap-3 cursor-pointer">
-             <input type="file" accept="image/*" className="hidden" disabled={uploadingAvatar} onChange={e => uploadAvatar(e.target.files?.[0])} />
+           <label htmlFor="profile-avatar-upload" className={`flex items-center gap-3 ${uploadingAvatar ? 'cursor-wait opacity-70' : 'cursor-pointer'}`}>
+             <input
+               id="profile-avatar-upload"
+               type="file"
+               accept="image/*"
+               className="hidden"
+               disabled={uploadingAvatar}
+               onChange={e => { uploadAvatar(e.target.files?.[0]); e.target.value = ''; }}
+             />
              <div className="flex-1">
                <div className="font-medium">Или загрузи свою фотографию</div>
-               <div className="text-xs text-muted-foreground">PNG, JPG до 5 МБ</div>
+               <div className="text-xs text-muted-foreground">PNG, JPG до 25 МБ</div>
              </div>
-             <Button variant="outline" className="rounded-xl">{uploadingAvatar ? 'Загружаем...' : 'Выбрать'}</Button>
+             <span className="inline-flex items-center justify-center px-4 h-10 rounded-xl border border-border bg-background text-sm font-medium hover:bg-secondary select-none">
+               {uploadingAvatar ? 'Загружаем…' : 'Выбрать'}
+             </span>
            </label>
          </div>
 
