@@ -31,7 +31,30 @@ interface ExtractedEvent {
   confidence: number; // 0..1
 }
 
-const VALID_CATEGORIES = ['hackathon','olympiad','grant','internship','summer_school','competition','exchange','mentorship','forum','mun','volunteering','custom'];
+const VALID_CATEGORIES = ['hackathon','olympiad','grant','scholarship','fellowship','internship','summer_school','competition','exchange','mentorship','forum','conference','workshop','accelerator','mun','volunteering','custom'];
+
+// Heuristic title-based category mapping as a safety net when Llama returns 'custom'
+// or the user-facing category set evolves faster than the prompt.
+function inferCategoryFromTitle(title: string, fallback: string): string {
+  const t = (title || '').toLowerCase();
+  if (/fellowship|fellow\b/.test(t)) return 'fellowship';
+  if (/scholarship|stipend|stipendi/.test(t)) return 'scholarship';
+  if (/hackathon|hack-?a-?thon/.test(t)) return 'hackathon';
+  if (/olympiad|\u043e\u043b\u0438\u043c\u043f\u0438\u0430\u0434/.test(t)) return 'olympiad';
+  if (/internship|\u0441\u0442\u0430\u0436\u0438\u0440\u043e\u0432\u043a/.test(t)) return 'internship';
+  if (/grant|\u0433\u0440\u0430\u043d\u0442/.test(t)) return 'grant';
+  if (/summer school|\u043b\u0435\u0442\u043d\u044f\u044f \u0448\u043a\u043e\u043b/.test(t)) return 'summer_school';
+  if (/mentorship|\u043c\u0435\u043d\u0442\u043e\u0440/.test(t)) return 'mentorship';
+  if (/conference|\u043a\u043e\u043d\u0444\u0435\u0440\u0435\u043d\u0446/.test(t)) return 'conference';
+  if (/workshop|\u0432\u043e\u0440\u043a\u0448\u043e\u043f/.test(t)) return 'workshop';
+  if (/accelerator|incubat|\u0430\u043a\u0441\u0435\u043b\u0435\u0440\u0430\u0442\u043e\u0440/.test(t)) return 'accelerator';
+  if (/forum|\u0444\u043e\u0440\u0443\u043c/.test(t)) return 'forum';
+  if (/exchange|\u043e\u0431\u043c\u0435\u043d/.test(t)) return 'exchange';
+  if (/(model un|mun)\b/.test(t)) return 'mun';
+  if (/volunteer|\u0432\u043e\u043b\u043e\u043d\u0442/.test(t)) return 'volunteering';
+  if (/competition|contest|\u043a\u043e\u043d\u043a\u0443\u0440\u0441/.test(t)) return 'competition';
+  return fallback;
+}
 
 async function fetchSource(url: string): Promise<string> {
   const r = await fetch(url, {
@@ -149,7 +172,15 @@ ${html}
       title: String(e.title).trim().slice(0, 250),
       short_description: String(e.short_description ?? '').slice(0, 500),
       description: String(e.description ?? e.short_description ?? '').slice(0, 5000),
-      category: VALID_CATEGORIES.includes(e.category) ? e.category : 'custom',
+      category: (() => {
+        const raw = String(e.category || '').toLowerCase().trim();
+        if (VALID_CATEGORIES.includes(raw)) {
+          // Llama sometimes picks 'custom' even when a clear category exists in the title — override.
+          if (raw === 'custom') return inferCategoryFromTitle(e.title, 'custom');
+          return raw;
+        }
+        return inferCategoryFromTitle(e.title, 'custom');
+      })(),
       deadline: validDate(e.deadline),
       start_date: validDate(e.start_date),
       end_date: validDate(e.end_date),
