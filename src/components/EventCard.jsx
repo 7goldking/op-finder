@@ -41,6 +41,14 @@ export default function EventCard({ event, index = 0 }) {
               <span className="px-2.5 py-1 rounded-full bg-background/95 backdrop-blur text-[11px] font-medium uppercase tracking-wider">
                 {cat.label}
               </span>
+              {event.discovery_source === 'ai-agent' && (
+                <span
+                  className="px-2 py-1 rounded-full bg-violet-500/95 text-white backdrop-blur text-[10px] font-semibold tracking-wider flex items-center gap-1"
+                  title={lang === 'en' ? 'Auto-discovered by AI' : 'Найдено AI-агентом'}
+                >
+                  🤖 AI
+                </span>
+              )}
             </div>
             <div className="absolute top-3 right-14">
               <BookmarkButton event={event} />

@@ -28,6 +28,7 @@ const Portfolio = lazy(() => import('@/pages/Portfolio'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 const AIChat = lazy(() => import('@/pages/AIChat'));
 const OrgDashboard = lazy(() => import('@/pages/OrgDashboard'));
+const AdminDiscovery = lazy(() => import('@/pages/AdminDiscovery'));
 const CreateEvent = lazy(() => import('@/pages/CreateEvent'));
 const OrgApplications = lazy(() => import('@/pages/OrgApplications'));
 const Mentors = lazy(() => import('@/pages/Mentors'));
@@ -87,6 +88,7 @@ const AuthenticatedApp = () => {
           <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
           <Route path="/assistant" element={<PageTransition><AIChat /></PageTransition>} />
           <Route path="/org" element={<PageTransition><OrgDashboard /></PageTransition>} />
+          <Route path="/admin/discovery" element={<PageTransition><AdminDiscovery /></PageTransition>} />
           <Route path="/org/event/new" element={<PageTransition><CreateEvent /></PageTransition>} />
           <Route path="/org/event/:id/edit" element={<PageTransition><CreateEvent /></PageTransition>} />
           <Route path="/org/event/:eventId/applications" element={<PageTransition><OrgApplications /></PageTransition>} />

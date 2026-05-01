@@ -153,6 +153,35 @@ export default function EventDetail() {
             </div>
           </div>
 
+          {event.discovery_source === 'ai-agent' && (
+            <div className="rounded-2xl border border-violet-200 bg-violet-50 dark:bg-violet-950/30 dark:border-violet-900 p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🤖</span>
+                <div className="flex-1 text-sm">
+                  <div className="font-semibold mb-1">
+                    {lang === 'en' ? 'Auto-discovered by AI agent' : 'Найдено AI-агентом Op Finder'}
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {lang === 'en'
+                      ? 'Our AI agent collected this event from public sources. Information may not be complete — verify on the original page before applying.'
+                      : 'Наш AI-агент собрал это событие из публичных источников. Информация может быть неполной — перед подачей заявки проверьте оригинальную страницу.'}
+                  </p>
+                  {event.external_url && (
+                    <a
+                      href={event.external_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-2 text-violet-700 dark:text-violet-300 font-medium hover:underline"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      {lang === 'en' ? 'Open original source' : 'Открыть оригинал'}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {event.short_description && (
             <p className="text-lg text-muted-foreground leading-relaxed">{tx.short_description || event.short_description}</p>
           )}
