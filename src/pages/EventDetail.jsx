@@ -153,6 +153,35 @@ export default function EventDetail() {
             </div>
           </div>
 
+          {event.discovery_source === 'ai-agent' && (
+            <div className="rounded-2xl border border-violet-200 bg-violet-50 dark:bg-violet-950/30 dark:border-violet-900 p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🤖</span>
+                <div className="flex-1 text-sm">
+                  <div className="font-semibold mb-1">
+                    {lang === 'en' ? 'Auto-discovered by AI agent' : 'Найдено AI-агентом Op Finder'}
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {lang === 'en'
+                      ? 'Our AI agent collected this event from public sources. Information may not be complete — verify on the original page before applying.'
+                      : 'Наш AI-агент собрал это событие из публичных источников. Информация может быть неполной — перед подачей заявки проверьте оригинальную страницу.'}
+                  </p>
+                  {event.external_url && (
+                    <a
+                      href={event.external_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-2 text-violet-700 dark:text-violet-300 font-medium hover:underline"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      {lang === 'en' ? 'Open original source' : 'Открыть оригинал'}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {event.short_description && (
             <p className="text-lg text-muted-foreground leading-relaxed">{tx.short_description || event.short_description}</p>
           )}
@@ -229,18 +258,42 @@ export default function EventDetail() {
               )}
             </div>
 
-            {hasApplied ? (
-              <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Application sent' : 'Заявка отправлена'}</Button>
-            ) : past ? (
-              <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Applications closed' : 'Подача закрыта'}</Button>
-            ) : (
-              <Button onClick={() => navigate(`/event/${id}/apply`)} className="w-full h-12 rounded-full gap-2">
-                {lang === 'en' ? 'Apply' : 'Подать заявку'}
-                {days !== null && days <= 7 && days >= 0 && (
-                  <span className="text-xs opacity-70">· {days === 0 ? (lang === 'en' ? 'today' : 'сегодня') : `${days} ${lang === 'en' ? 'd.' : 'дн.'}`}</span>
-                )}
-              </Button>
-            )}
+            {(() => {
+              // Event is "external" if it was discovered by AI OR has no linked verified organization.
+              // For external events we can't process applications internally — send user to the source.
+              const isExternal = event.discovery_source === 'ai-agent' || !event.organization_id;
+              if (hasApplied) {
+                return <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Application sent' : 'Заявка отправлена'}</Button>;
+              }
+              if (past) {
+                return <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Applications closed' : 'Подача закрыта'}</Button>;
+              }
+              if (isExternal) {
+                const href = event.external_url;
+                if (!href) {
+                  return <Button disabled className="w-full h-12 rounded-full">{lang === 'en' ? 'Registration link missing' : 'Ссылка на регистрацию не указана'}</Button>;
+                }
+                return (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="block">
+                    <Button className="w-full h-12 rounded-full gap-2">
+                      <ExternalLink className="w-4 h-4" />
+                      {lang === 'en' ? 'Go to registration' : 'Перейти к регистрации'}
+                      {days !== null && days <= 7 && days >= 0 && (
+                        <span className="text-xs opacity-70">· {days === 0 ? (lang === 'en' ? 'today' : 'сегодня') : `${days} ${lang === 'en' ? 'd.' : 'дн.'}`}</span>
+                      )}
+                    </Button>
+                  </a>
+                );
+              }
+              return (
+                <Button onClick={() => navigate(`/event/${id}/apply`)} className="w-full h-12 rounded-full gap-2">
+                  {lang === 'en' ? 'Apply' : 'Подать заявку'}
+                  {days !== null && days <= 7 && days >= 0 && (
+                    <span className="text-xs opacity-70">· {days === 0 ? (lang === 'en' ? 'today' : 'сегодня') : `${days} ${lang === 'en' ? 'd.' : 'дн.'}`}</span>
+                  )}
+                </Button>
+              );
+            })()}
 
             <div className="grid grid-cols-2 gap-2 mt-3">
               <Button variant="outline" onClick={toggleBookmark} className="rounded-full gap-1.5">

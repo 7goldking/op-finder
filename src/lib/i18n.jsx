@@ -81,10 +81,10 @@ const DICT = {
     'home.ctaTitle': 'Представляешь организацию?',
     'home.ctaDesc': 'Публикуй события, управляй заявками и отслеживай аналитику — всё в одном месте.',
     'home.ctaBtn': 'Открыть каталог событий',
-    'home.orgs': 'Наши партнёры и организации',
+    'home.orgs': 'Организации',
 
     // Ambassador banner
-    'ambassador.kicker': 'Партнёр',
+    'ambassador.kicker': 'Организация',
     'ambassador.title': 'KazYouthDiplomacy',
     'ambassador.desc': 'KazYouthDiplomacy — это молодёжная платформа и карьерный навигатор, созданный для развития международного сотрудничества, поддержки молодых лидеров и продвижения дипломатического потенциала Казахстана.',
     'ambassador.cta': 'Перейти на kazyouthdiplomacy.com',
@@ -470,10 +470,10 @@ const DICT = {
     'home.ctaTitle': 'Representing an organization?',
     'home.ctaDesc': 'Publish events, manage applications, and track analytics — all in one place.',
     'home.ctaBtn': 'Open event catalog',
-    'home.orgs': 'Our partners & organizations',
+    'home.orgs': 'Organizations',
 
     // Ambassador banner
-    'ambassador.kicker': 'Partner',
+    'ambassador.kicker': 'Organization',
     'ambassador.title': 'KazYouthDiplomacy',
     'ambassador.desc': 'KazYouthDiplomacy is a youth platform and career navigator built to advance international cooperation, support young leaders and promote the diplomatic potential of Kazakhstan.',
     'ambassador.cta': 'Visit kazyouthdiplomacy.com',
@@ -852,8 +852,8 @@ const DICT = {
     'home.ctaTitle': 'Сен ұйымды білесiң бе?',
     'home.ctaDesc': 'Оқиғаларды жарияла, өтініштерді басқар және аналитиканы бақыла - бәрi бiр жерде.',
     'home.ctaBtn': 'Оқиғалар каталогын ашу',
-    'home.orgs': 'Біздің серiктерiмiз және ұйымдар',
-    'ambassador.kicker': 'Серiк',
+    'home.orgs': 'Ұйымдар',
+    'ambassador.kicker': 'Ұйым',
     'ambassador.title': 'KazYouthDiplomacy',
     'ambassador.desc': 'KazYouthDiplomacy - халықаралық ынтымақтастықты дамыту, жас лидерлерді қолдау және Қазақстанның дипломатиялық потенциалын өсіру үшін жасалған жастар платформасы және карьера навигаторы.',
     'ambassador.cta': 'kazyouthdiplomacy.com сайтына өту',
