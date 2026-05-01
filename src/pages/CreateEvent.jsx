@@ -23,6 +23,7 @@ export default function CreateEvent() {
   const [tagDraft, setTagDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   useEffect(() => {
     if (isEdit) {
@@ -34,8 +35,18 @@ export default function CreateEvent() {
 
   const uploadCover = async (file) => {
     if (!file) return;
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setForm(f => ({ ...f, cover_url: file_url }));
+    setUploadingCover(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      if (!file_url) throw new Error('Пустой URL после загрузки');
+      setForm(f => ({ ...f, cover_url: file_url }));
+      toast.success('Обложка загружена');
+    } catch (e) {
+      console.error('Cover upload error:', e);
+      toast.error('Ошибка загрузки: ' + (e?.message || 'попробуй другое фото'));
+    } finally {
+      setUploadingCover(false);
+    }
   };
 
   const aiFill = async () => {
@@ -123,12 +134,19 @@ export default function CreateEvent() {
               <button onClick={() => setForm({ ...form, cover_url: '' })} className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-background/90 text-xs">Удалить</button>
             </div>
           ) : (
-            <label className="flex items-center justify-center aspect-[16/9] rounded-2xl border border-dashed border-border cursor-pointer hover:border-foreground/40 bg-secondary/30">
+            <label className={`flex items-center justify-center aspect-[16/9] rounded-2xl border border-dashed border-border bg-secondary/30 ${uploadingCover ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:border-foreground/40'}`}>
               <div className="text-center">
-                <Upload className="w-5 h-5 mx-auto mb-2" />
-                <div className="text-sm">Загрузить обложку</div>
+                {uploadingCover ? <Loader2 className="w-5 h-5 mx-auto mb-2 animate-spin" /> : <Upload className="w-5 h-5 mx-auto mb-2" />}
+                <div className="text-sm">{uploadingCover ? 'Загружается…' : 'Загрузить обложку'}</div>
+                <div className="text-[10px] text-muted-foreground mt-1">JPG/PNG, до 25 МБ</div>
               </div>
-              <input type="file" accept="image/*" className="hidden" onChange={e => uploadCover(e.target.files?.[0])} />
+              <input
+                type="file"
+                accept="image/*"
+                disabled={uploadingCover}
+                className="hidden"
+                onChange={e => { uploadCover(e.target.files?.[0]); e.target.value = ''; }}
+              />
             </label>
           )}
         </div>
