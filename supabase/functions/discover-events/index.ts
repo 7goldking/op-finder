@@ -59,26 +59,71 @@ function inferCategoryFromTitle(title: string, fallback: string): string {
 async function fetchSource(url: string): Promise<string> {
   const r = await fetch(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; OpFinderBot/1.0; +https://op-finder.online)',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
+      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'ru,en;q=0.9,kk;q=0.8',
     },
   });
   if (!r.ok) throw new Error(`fetch ${url} → ${r.status}`);
   const html = await r.text();
-  // Strip scripts/styles to keep tokens down
+
+  // Telegram /s/ preview pages — extract individual posts with link + datetime so
+  // Llama sees structured channel feed, not garbled HTML soup.
+  if (url.startsWith('https://t.me/s/') || url.startsWith('http://t.me/s/')) {
+    const posts: string[] = [];
+    // <div class="tgme_widget_message_text" ...>...</div>
+    const msgRe = /<div class="tgme_widget_message_wrap[\s\S]*?<a class="tgme_widget_message_date"[^>]*href="(https?:\/\/t\.me\/[^\"]+)"[\s\S]*?<time[^>]*datetime="([^"]+)"[\s\S]*?<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<div class="tgme_widget_message_footer/g;
+    let m: RegExpExecArray | null;
+    while ((m = msgRe.exec(html)) !== null) {
+      const link = m[1];
+      const date = m[2];
+      const text = m[3]
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<a[^>]*href="([^\"]+)"[^>]*>([^<]*)<\/a>/gi, '$2 ($1)')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;|&amp;|&lt;|&gt;|&quot;|&#39;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (text.length > 30) {
+        posts.push(`[POST ${posts.length + 1} · ${date}]\nURL: ${link}\n${text.slice(0, 1200)}`);
+      }
+      if (posts.length >= 20) break;
+    }
+    if (posts.length > 0) return posts.join('\n\n').slice(0, 12000);
+    // Fall through to generic if no posts matched (channel might be private)
+  }
+
+  // RSS / Atom feed handling
+  if (html.includes('<rss') || html.includes('<feed')) {
+    const items: string[] = [];
+    const itemRe = /<(item|entry)>([\s\S]*?)<\/\1>/g;
+    let m: RegExpExecArray | null;
+    while ((m = itemRe.exec(html)) !== null && items.length < 20) {
+      const inner = m[2];
+      const title = (inner.match(/<title[^>]*>([\s\S]*?)<\/title>/) || [, ''])[1]
+        .replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, ' ').trim();
+      const link = (inner.match(/<link[^>]*>([\s\S]*?)<\/link>/) || inner.match(/<link[^>]*href="([^"]+)"/) || [, ''])[1].trim();
+      const desc = (inner.match(/<(description|summary|content)[^>]*>([\s\S]*?)<\/\1>/) || [, '', ''])[2]
+        .replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, ' ').trim();
+      const pub = (inner.match(/<(pubDate|updated|published)[^>]*>([\s\S]*?)<\/\1>/) || [, '', ''])[2].trim();
+      items.push(`[${title}]\nURL: ${link}\nDate: ${pub}\n${desc.slice(0, 800)}`);
+    }
+    if (items.length) return items.join('\n\n').slice(0, 12000);
+  }
+
+  // Generic HTML — strip scripts/styles + tags
   const cleaned = html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
     .replace(/<!--[\s\S]*?-->/g, '');
-  // Strip HTML tags entirely — we only need text. Then cap at 12K chars (~3K tokens).
   const text = cleaned
+    .replace(/<a[^>]*href="([^\"]+)"[^>]*>([^<]*)<\/a>/gi, '$2 ($1)') // preserve link URLs
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;|&amp;|&lt;|&gt;|&quot;|&#39;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  return text.slice(0, 8000);
+  return text.slice(0, 10000);
 }
 
 async function extractWithLlama(sourceName: string, sourceUrl: string, html: string): Promise<ExtractedEvent[]> {
@@ -121,27 +166,40 @@ ${html}
 
 Извлеки до 10 самых актуальных событий. Если событий нет — верни []`;
 
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.2,
-      max_tokens: 2500,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!r.ok) {
-    const errText = await r.text();
-    throw new Error(`Groq ${r.status}: ${errText.slice(0, 500)}`);
+  // Try 70b first; on rate-limit fall back to 8b (much higher daily quota, smaller context)
+  const models = [
+    { id: 'llama-3.3-70b-versatile', userPromptCap: 12000 },
+    { id: 'llama-3.1-8b-instant', userPromptCap: 4500 },
+  ];
+  let r: Response | null = null;
+  let lastErr = '';
+  for (const model of models) {
+    const trimmedHtml = html.slice(0, model.userPromptCap);
+    const trimmedUserPrompt = `Источник: ${sourceName} (${sourceUrl})\n\nHTML-контент:\n${trimmedHtml}\n\nИзвлеки до 10 самых актуальных событий. Если событий нет — верни []`;
+    r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: model.id,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: trimmedUserPrompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 2500,
+        response_format: { type: 'json_object' },
+      }),
+    });
+    if (r.ok) break;
+    lastErr = `${model.id} ${r.status}: ${(await r.text()).slice(0, 300)}`;
+    // Fall back on rate-limit (429) or context-too-large (413)
+    if (r.status !== 429 && r.status !== 413) break;
+  }
+  if (!r || !r.ok) {
+    throw new Error(`Groq: ${lastErr}`);
   }
 
   const data = await r.json();
@@ -245,15 +303,19 @@ async function processSource(source: { id: string; name: string; url: string }) 
     events = await extractWithLlama(source.name, source.url, html);
     const todayStr = new Date().toISOString().slice(0, 10);
     for (const ev of events) {
-      // Quality gate: confidence >= 0.7
-      if (ev.confidence < 0.7) { skipped++; continue; }
+      // Quality gate: confidence >= 0.6 (lowered from 0.7 for higher recall)
+      if (ev.confidence < 0.6) { skipped++; continue; }
       // Must have at least a deadline OR a start_date
       if (!ev.deadline && !ev.start_date) { skipped++; continue; }
       // Reject past events
       if (ev.deadline && ev.deadline < todayStr) { skipped++; continue; }
       if (!ev.deadline && ev.start_date && ev.start_date < todayStr) { skipped++; continue; }
-      // Must have a registration URL distinct from the source landing page
-      if (!ev.external_url || ev.external_url === source.url) { skipped++; continue; }
+      // Must have a registration URL with a path beyond just the domain (not the bare landing page)
+      if (!ev.external_url) { skipped++; continue; }
+      try {
+        const parsed = new URL(ev.external_url);
+        if (!parsed.pathname || parsed.pathname === '/' || parsed.pathname === '') { skipped++; continue; }
+      } catch { skipped++; continue; }
       // Title quality: at least 8 chars, no "Breaking news" clickbait signals
       if (!ev.title || ev.title.length < 8) { skipped++; continue; }
       if (await isDuplicate(ev)) { skipped++; continue; }
