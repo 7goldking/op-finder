@@ -57,6 +57,7 @@ export default function Catalog() {
       if (format !== 'all' && e.format !== format) return false;
       if (city !== 'all' && e.city !== city) return false;
       if (source === 'ai' && e.discovery_source !== 'ai-agent') return false;
+      if (source === 'verified' && !e.organization_verified) return false;
       if (source === 'org' && e.discovery_source === 'ai-agent') return false;
       if (search) {
         const q = search.toLowerCase();
@@ -88,9 +89,9 @@ export default function Catalog() {
 
       <div className="flex items-center justify-between gap-4 mb-6 text-sm text-muted-foreground flex-wrap">
         <span>{loading ? t('catalog.loading') : `${t('catalog.found')}: ${filtered.length}`}</span>
-        <div className="flex items-center gap-1 rounded-full border border-border p-1 bg-card">
+        <div className="flex items-center gap-1 rounded-full border border-border p-1 bg-card flex-wrap">
           <button onClick={() => setSource('all')} className={`px-3 py-1 rounded-full text-xs font-medium transition ${source === 'all' ? 'bg-foreground text-background' : 'hover:bg-muted'}`}>{t('catalog.source_all')}</button>
-          <button onClick={() => setSource('org')} className={`px-3 py-1 rounded-full text-xs font-medium transition ${source === 'org' ? 'bg-foreground text-background' : 'hover:bg-muted'}`}>{t('catalog.source_org')}</button>
+          <button onClick={() => setSource('verified')} className={`px-3 py-1 rounded-full text-xs font-medium transition flex items-center gap-1 ${source === 'verified' ? 'bg-emerald-600 text-white' : 'hover:bg-muted'}`}>🛡 {t('catalog.source_verified')}</button>
           <button onClick={() => setSource('ai')} className={`px-3 py-1 rounded-full text-xs font-medium transition flex items-center gap-1 ${source === 'ai' ? 'bg-violet-600 text-white' : 'hover:bg-muted'}`}>🤖 {t('catalog.source_ai')}</button>
         </div>
       </div>
