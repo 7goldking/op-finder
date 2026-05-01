@@ -123,8 +123,9 @@ export default function Profile() {
   const uploadAvatar = async (file) => {
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Файл слишком большой (макс. 5 МБ)');
+    // 25 MB raw cap (compression brings most photos under 1 MB regardless)
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error('Файл слишком большой (макс. 25 МБ)');
       return;
     }
 

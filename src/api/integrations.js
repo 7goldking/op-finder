@@ -1,11 +1,24 @@
 import { supabase } from './supabaseClient';
+import { compressImage } from '@/lib/imageUpload';
+
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // hard cap, post-compression
 
 export const integrations = {
   Core: {
     async UploadFile({ file }) {
-      const ext = file.name.split('.').pop();
+      if (!file) throw new Error('Файл не выбран');
+      // Compress images client-side; non-images pass through.
+      const prepared = await compressImage(file).catch(() => file);
+      if (prepared.size > MAX_UPLOAD_BYTES) {
+        throw new Error(`Файл слишком большой (${(prepared.size / 1024 / 1024).toFixed(1)} МБ, лимит 25 МБ)`);
+      }
+      const ext = (prepared.name.split('.').pop() || 'bin').toLowerCase();
       const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('files').upload(path, file, { upsert: false });
+      const { error } = await supabase.storage.from('files').upload(path, prepared, {
+        upsert: false,
+        contentType: prepared.type || undefined,
+        cacheControl: '3600',
+      });
       if (error) throw error;
       const { data } = supabase.storage.from('files').getPublicUrl(path);
       return { file_url: data.publicUrl };
