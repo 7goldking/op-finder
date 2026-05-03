@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, X, MapPin, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { getCategories, getFormats } from '@/lib/categories';
@@ -102,13 +103,14 @@ export default function FilterBar({ search, setSearch, category, setCategory, fo
         </div>
       )}
 
-      {cityOpen && (
+      {cityOpen && createPortal((
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center"
+          className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end md:items-center justify-center"
           onClick={() => setCityOpen(false)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <div
-            className="w-full md:max-w-md md:rounded-2xl rounded-t-2xl bg-background border border-border shadow-2xl flex flex-col max-h-[85vh] md:max-h-[80vh]"
+            className="w-full md:max-w-md md:rounded-2xl rounded-t-2xl bg-background border border-border shadow-2xl flex flex-col h-[85vh] md:h-[80vh]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border shrink-0">
@@ -167,7 +169,7 @@ export default function FilterBar({ search, setSearch, category, setCategory, fo
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
 
       <div className="fade-right-edge md:[&::after]:hidden">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 snap-x">
