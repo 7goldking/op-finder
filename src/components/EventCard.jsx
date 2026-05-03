@@ -10,12 +10,23 @@ import { cn } from '@/lib/utils';
 import BookmarkButton from '@/components/BookmarkButton';
 import { useI18n } from '@/lib/i18n';
 
+const KZ_CITIES = ['алматы','астана','almaty','astana','шымкент','shymkent','караганда','karaganda','актобе','aktobe','павлодар','pavlodar','семей','semey','тараз','taraz','кокшетау','kokshetau','туркестан','turkestan','atyrau','атырау','актау','aktau','уральск','uralsk','костанай','kostanay','кызылорда','kyzylorda'];
+const KZ_KEYWORDS = ['казахст','kazakh','astana hub','bolashak','болашак','techorda','jusan','kimep','nazarbayev','назарбаев','almau','satbayev','сатбаев','kazguu','казгюу','nis','нис','tsarka','workitkz','grants.kz','қазақ'];
+function isKzEvent(event) {
+  const city = (event.city || '').toLowerCase().trim();
+  if (KZ_CITIES.some(c => city === c || city.includes(c))) return true;
+  const hay = [event.title, event.organization_name, event.description, event.short_description, (event.tags || []).join(' ')]
+    .filter(Boolean).join(' ').toLowerCase();
+  return KZ_KEYWORDS.some(kw => hay.includes(kw));
+}
+
 export default function EventCard({ event, index = 0 }) {
   const { lang, t } = useI18n();
   const cat = getCategory(event.category, event.category_custom, lang);
   const days = daysUntil(event.application_deadline);
   const soon = days !== null && days >= 0 && days <= 7;
   const past = days !== null && days < 0;
+  const kz = isKzEvent(event);
 
   return (
     <motion.div
@@ -42,6 +53,14 @@ export default function EventCard({ event, index = 0 }) {
               <span className="px-2.5 py-1 rounded-full bg-background/95 backdrop-blur text-[11px] font-medium uppercase tracking-wider">
                 {cat.label}
               </span>
+              {kz && (
+                <span
+                  className="px-2 py-1 rounded-full bg-blue-500/95 text-white backdrop-blur text-[10px] font-semibold tracking-wider flex items-center gap-1"
+                  title="Казахстан"
+                >
+                  🇰🇿 KZ
+                </span>
+              )}
               {event.discovery_source === 'ai-agent' && (
                 <span
                   className="px-2 py-1 rounded-full bg-violet-500/95 text-white backdrop-blur text-[10px] font-semibold tracking-wider flex items-center gap-1"

@@ -164,7 +164,7 @@ async function extractWithLlama(sourceName: string, sourceUrl: string, html: str
 HTML-контент:
 ${html}
 
-Извлеки до 10 самых актуальных событий. Если событий нет — верни []`;
+Извлеки до 15 самых актуальных событий. Если событий нет — верни []`;
 
   // Primary: Cloudflare Workers AI (Llama 3.3 70B, paid tier via existing CF account).
   // Fallback to Groq if CF creds missing or call fails (rate-limit safety).
@@ -175,7 +175,7 @@ ${html}
 
   if (cfAccountId && cfToken) {
     const trimmedHtml = html.slice(0, 12000);
-    const trimmedUserPrompt = `Источник: ${sourceName} (${sourceUrl})\n\nHTML-контент:\n${trimmedHtml}\n\nИзвлеки до 10 самых актуальных событий. Если событий нет — верни []`;
+    const trimmedUserPrompt = `Источник: ${sourceName} (${sourceUrl})\n\nHTML-контент:\n${trimmedHtml}\n\nИзвлеки до 15 самых актуальных событий. Если событий нет — верни []`;
     const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast`, {
       method: 'POST',
       headers: {
@@ -210,7 +210,7 @@ ${html}
     let r: Response | null = null;
     for (const model of models) {
       const trimmedHtml = html.slice(0, model.userPromptCap);
-      const trimmedUserPrompt = `Источник: ${sourceName} (${sourceUrl})\n\nHTML-контент:\n${trimmedHtml}\n\nИзвлеки до 10 самых актуальных событий. Если событий нет — верни []`;
+      const trimmedUserPrompt = `Источник: ${sourceName} (${sourceUrl})\n\nHTML-контент:\n${trimmedHtml}\n\nИзвлеки до 15 самых актуальных событий. Если событий нет — верни []`;
       r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
