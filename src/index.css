@@ -146,6 +146,29 @@
     scrollbar-width: none;
   }
 
+  /* Right-edge fade hint that horizontal content continues offscreen.
+     Apply to a wrapper with position:relative around an overflow-x-auto child. */
+  .fade-right-edge {
+    position: relative;
+  }
+  .fade-right-edge::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 32px;
+    pointer-events: none;
+    background: linear-gradient(to right, transparent, hsl(var(--background)));
+  }
+
+  /* Mobile-only safe bottom space so fixed bottom nav never covers content. */
+  @media (max-width: 767px) {
+    .pb-mobile-nav {
+      padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+    }
+  }
+
   .noise-bg {
     background-image:
       radial-gradient(circle at 20% 10%, hsl(var(--muted)) 0%, transparent 40%),

@@ -110,7 +110,8 @@ export default function Dashboard() {
       )}
 
       {/* Apps tabs */}
-      <div className="mb-6 flex items-center gap-2 border-b border-border overflow-x-auto scrollbar-hide">
+      <div className="mb-6 fade-right-edge md:[&::after]:hidden">
+        <div className="flex items-center gap-2 border-b border-border overflow-x-auto scrollbar-hide">
         {[
           { key: 'active', label: `${t('dashboard.tab_active')} (${activeApps.length})` },
           { key: 'accepted', label: `${t('dashboard.tab_accepted')} (${acceptedApps.length})` },
@@ -128,6 +129,7 @@ export default function Dashboard() {
             {tab === item.key && <motion.div layoutId="tab-line" className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />}
           </button>
         ))}
+        </div>
       </div>
 
       {/* Subscription plan card */}

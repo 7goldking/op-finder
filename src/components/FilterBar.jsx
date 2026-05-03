@@ -29,68 +29,74 @@ export default function FilterBar({ search, setSearch, category, setCategory, fo
         )}
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-        <button
-          onClick={() => setCategory('all')}
-          className={cn(
-            "shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-all",
-            category === 'all'
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-background border-border hover:border-foreground/30"
-          )}
-        >
-          {lang === 'en' ? 'All' : 'Все'}
-        </button>
-        {CATEGORIES.map(c => (
+      <div className="fade-right-edge md:[&::after]:hidden">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 snap-x">
           <button
-            key={c.value}
-            onClick={() => setCategory(category === c.value ? 'all' : c.value)}
+            onClick={() => setCategory('all')}
             className={cn(
-              "shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap",
-              category === c.value
+              "shrink-0 snap-start px-3.5 py-2 rounded-full text-sm font-medium border transition-all",
+              category === 'all'
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background border-border hover:border-foreground/30"
             )}
           >
-            {c.label}
+            {lang === 'en' ? 'All' : 'Все'}
           </button>
-        ))}
+          {CATEGORIES.map(c => (
+            <button
+              key={c.value}
+              onClick={() => setCategory(category === c.value ? 'all' : c.value)}
+              className={cn(
+                "shrink-0 snap-start px-3.5 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap",
+                category === c.value
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background border-border hover:border-foreground/30"
+              )}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {cities.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-          <span className="text-xs text-muted-foreground shrink-0">{lang === 'en' ? 'City:' : 'Город:'}</span>
-          <button
-            onClick={() => setCity('all')}
-            className={cn("shrink-0 text-xs px-3 py-1 rounded-full transition-colors",
-              city === 'all' ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
-          >{lang === 'en' ? 'Any' : 'Любой'}</button>
-          {cities.map(c => (
-            <button key={c}
-              onClick={() => setCity(city === c ? 'all' : c)}
-              className={cn("shrink-0 text-xs px-3 py-1 rounded-full transition-colors whitespace-nowrap",
-                city === c ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
-            >{c}</button>
-          ))}
+        <div className="fade-right-edge md:[&::after]:hidden">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 snap-x">
+            <span className="text-xs text-muted-foreground shrink-0">{lang === 'en' ? 'City:' : 'Город:'}</span>
+            <button
+              onClick={() => setCity('all')}
+              className={cn("shrink-0 snap-start text-xs px-3 py-1.5 rounded-full transition-colors",
+                city === 'all' ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+            >{lang === 'en' ? 'Any' : 'Любой'}</button>
+            {cities.map(c => (
+              <button key={c}
+                onClick={() => setCity(city === c ? 'all' : c)}
+                className={cn("shrink-0 snap-start text-xs px-3 py-1.5 rounded-full transition-colors whitespace-nowrap",
+                  city === c ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+              >{c}</button>
+            ))}
+          </div>
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">{lang === 'en' ? 'Format:' : 'Формат:'}</span>
-        {[{ value: 'all', label: lang === 'en' ? 'Any' : 'Любой' }, ...FORMATS].map(f => (
-          <button
-            key={f.value}
-            onClick={() => setFormat(f.value)}
-            className={cn(
-              "text-xs px-3 py-1 rounded-full transition-colors",
-              format === f.value
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
+      <div className="fade-right-edge md:[&::after]:hidden">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 snap-x">
+          <span className="text-xs text-muted-foreground shrink-0">{lang === 'en' ? 'Format:' : 'Формат:'}</span>
+          {[{ value: 'all', label: lang === 'en' ? 'Any' : 'Любой' }, ...FORMATS].map(f => (
+            <button
+              key={f.value}
+              onClick={() => setFormat(f.value)}
+              className={cn(
+                "shrink-0 snap-start text-xs px-3 py-1.5 rounded-full transition-colors whitespace-nowrap",
+                format === f.value
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
