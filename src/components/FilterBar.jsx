@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { getCategories, getFormats } from '@/lib/categories';
+import { groupCitiesByCountry } from '@/lib/countries';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 
@@ -9,6 +10,7 @@ export default function FilterBar({ search, setSearch, category, setCategory, fo
   const { lang, t } = useI18n();
   const CATEGORIES = getCategories(lang);
   const FORMATS = getFormats(lang);
+  const groupedCities = useMemo(() => groupCitiesByCountry(cities, lang), [cities, lang]);
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -65,15 +67,31 @@ export default function FilterBar({ search, setSearch, category, setCategory, fo
             <span className="text-xs text-muted-foreground shrink-0">{lang === 'en' ? 'City:' : 'Город:'}</span>
             <button
               onClick={() => setCity('all')}
-              className={cn("shrink-0 snap-start text-xs px-3 py-1.5 rounded-full transition-colors",
-                city === 'all' ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+              className={cn("shrink-0 snap-start text-xs px-3 py-1.5 rounded-full border transition-colors",
+                city === 'all' ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground")}
             >{lang === 'en' ? 'Any' : 'Любой'}</button>
-            {cities.map(c => (
-              <button key={c}
-                onClick={() => setCity(city === c ? 'all' : c)}
-                className={cn("shrink-0 snap-start text-xs px-3 py-1.5 rounded-full transition-colors whitespace-nowrap",
-                  city === c ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
-              >{c}</button>
+            {groupedCities.map((group, gi) => (
+              <React.Fragment key={group.code}>
+                {gi > 0 && <span className="shrink-0 h-5 w-px bg-border mx-1" aria-hidden="true" />}
+                <span className="shrink-0 inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-muted-foreground/80 px-1">
+                  <span aria-hidden="true">{group.flag}</span>
+                  <span>{group.name}</span>
+                </span>
+                {group.cities.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCity(city === c ? 'all' : c)}
+                    className={cn(
+                      "shrink-0 snap-start text-xs px-3 py-1.5 rounded-full border transition-colors whitespace-nowrap",
+                      city === c
+                        ? "bg-foreground text-background border-foreground"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </React.Fragment>
             ))}
           </div>
         </div>
