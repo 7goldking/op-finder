@@ -25,17 +25,18 @@ export default function EventCard({ event, index = 0 }) {
     >
       <Link to={`/event/${event.id}`} className="group block">
         <article className="relative bg-card border border-border rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.12)] transition-all duration-300">
-          <div className="aspect-[16/10] relative overflow-hidden bg-muted">
-            {event.cover_url ? (
+          <div className={cn(
+            "relative overflow-hidden",
+            event.cover_url
+              ? "aspect-[16/9] sm:aspect-[16/10] bg-muted"
+              : "h-14 sm:h-16 bg-secondary"
+          )}>
+            {event.cover_url && (
               <img
                 src={event.cover_url}
                 alt={event.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-secondary">
-                <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{cat.label}</span>
-              </div>
             )}
             <div className="absolute top-3 left-3 flex items-center gap-2">
               <span className="px-2.5 py-1 rounded-full bg-background/95 backdrop-blur text-[11px] font-medium uppercase tracking-wider">
@@ -60,13 +61,13 @@ export default function EventCard({ event, index = 0 }) {
             )}
           </div>
 
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
               <span className="truncate">{event.organization_name}</span>
               {event.organization_verified && <VerifiedBadge size="sm" />}
             </div>
 
-            <h3 className="font-display text-lg font-semibold leading-snug text-balance mb-3 line-clamp-2 group-hover:underline underline-offset-4 decoration-1">
+            <h3 className="font-display text-base sm:text-lg font-semibold leading-snug text-balance mb-3 line-clamp-2 group-hover:underline underline-offset-4 decoration-1">
               {event.title}
             </h3>
 

@@ -369,7 +369,7 @@ export default function Layout() {
           )}
         </AnimatePresence>
 
-        <main className="flex-1 min-w-0 pb-24 md:pb-8 relative overflow-x-hidden">
+        <main className="flex-1 min-w-0 pb-mobile-nav md:pb-8 relative overflow-x-hidden">
           <HeroFrame />
           <Outlet context={{ user, setUser }} />
         </main>

@@ -114,9 +114,10 @@ export default function Profile() {
       });
       setSearchUserId('');
       setSearchResult(null);
-      toast.success('Запрос на дружбу отправлен');
-    } catch {
-      toast.error('Ошибка при отправке запроса');
+      toast.success(t('search.request_sent'));
+    } catch (e) {
+      console.error('Friend request error:', e);
+      toast.error(t('search.request_error'));
     }
   };
 
@@ -380,7 +381,7 @@ export default function Profile() {
                   </div>
                   {!friends.includes(searchResult.email) && (
                     <Button onClick={addFriendFromSearch} size="sm" className="rounded-full gap-1">
-                      <Plus className="w-3.5 h-3.5" /> {t('profile.send_request')}
+                      <Plus className="w-3.5 h-3.5" /> {t('search.send_request')}
                     </Button>
                   )}
                 </div>

@@ -12,7 +12,7 @@ const cors = {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY')!;
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') ?? '';
 
 const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -166,24 +166,23 @@ ${html}
 
 Извлеки до 10 самых актуальных событий. Если событий нет — верни []`;
 
-  // Try 70b first; on rate-limit fall back to 8b (much higher daily quota, smaller context)
-  const models = [
-    { id: 'llama-3.3-70b-versatile', userPromptCap: 12000 },
-    { id: 'llama-3.1-8b-instant', userPromptCap: 4500 },
-  ];
-  let r: Response | null = null;
+  // Primary: Cloudflare Workers AI (Llama 3.3 70B, paid tier via existing CF account).
+  // Fallback to Groq if CF creds missing or call fails (rate-limit safety).
+  const cfAccountId = Deno.env.get('CLOUDFLARE_ACCOUNT_ID');
+  const cfToken = Deno.env.get('CLOUDFLARE_AI_TOKEN');
+  let content = '';
   let lastErr = '';
-  for (const model of models) {
-    const trimmedHtml = html.slice(0, model.userPromptCap);
+
+  if (cfAccountId && cfToken) {
+    const trimmedHtml = html.slice(0, 12000);
     const trimmedUserPrompt = `Источник: ${sourceName} (${sourceUrl})\n\nHTML-контент:\n${trimmedHtml}\n\nИзвлеки до 10 самых актуальных событий. Если событий нет — верни []`;
-    r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Authorization': `Bearer ${cfToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model.id,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: trimmedUserPrompt },
@@ -193,17 +192,52 @@ ${html}
         response_format: { type: 'json_object' },
       }),
     });
-    if (r.ok) break;
-    lastErr = `${model.id} ${r.status}: ${(await r.text()).slice(0, 300)}`;
-    // Fall back on rate-limit (429) or context-too-large (413)
-    if (r.status !== 429 && r.status !== 413) break;
-  }
-  if (!r || !r.ok) {
-    throw new Error(`Groq: ${lastErr}`);
+    if (r.ok) {
+      const data = await r.json();
+      content = data?.result?.response ?? '';
+      if (typeof content !== 'string') content = JSON.stringify(content);
+    } else {
+      lastErr = `CF Workers AI ${r.status}: ${(await r.text()).slice(0, 300)}`;
+    }
   }
 
-  const data = await r.json();
-  const content: string = data.choices?.[0]?.message?.content ?? '[]';
+  // Fallback: Groq (free or paid tier)
+  if (!content) {
+    const models = [
+      { id: 'llama-3.3-70b-versatile', userPromptCap: 12000 },
+      { id: 'llama-3.1-8b-instant', userPromptCap: 4500 },
+    ];
+    let r: Response | null = null;
+    for (const model of models) {
+      const trimmedHtml = html.slice(0, model.userPromptCap);
+      const trimmedUserPrompt = `Источник: ${sourceName} (${sourceUrl})\n\nHTML-контент:\n${trimmedHtml}\n\nИзвлеки до 10 самых актуальных событий. Если событий нет — верни []`;
+      r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model.id,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: trimmedUserPrompt },
+          ],
+          temperature: 0.2,
+          max_tokens: 2500,
+          response_format: { type: 'json_object' },
+        }),
+      });
+      if (r.ok) break;
+      lastErr = `Groq ${model.id} ${r.status}: ${(await r.text()).slice(0, 300)}`;
+      if (r.status !== 429 && r.status !== 413) break;
+    }
+    if (!r || !r.ok) {
+      throw new Error(lastErr || 'No LLM provider available');
+    }
+    const data = await r.json();
+    content = data.choices?.[0]?.message?.content ?? '[]';
+  }
 
   // Llama with json_object mode returns an object, not array. Find the array inside.
   let parsed: any;
