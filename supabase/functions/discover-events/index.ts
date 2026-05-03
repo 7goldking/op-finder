@@ -240,9 +240,20 @@ ${html}
   }
 
   // Llama with json_object mode returns an object, not array. Find the array inside.
+  // Strip markdown code fences if present (Llama sometimes wraps JSON in ```json ... ```).
+  let cleaned = content.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+  }
+  // Find first { or [ and last } or ] to handle prose wrapping.
+  const firstBrace = cleaned.search(/[\[{]/);
+  const lastBrace = Math.max(cleaned.lastIndexOf(']'), cleaned.lastIndexOf('}'));
+  if (firstBrace > 0 && lastBrace > firstBrace) {
+    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+  }
   let parsed: any;
   try {
-    parsed = JSON.parse(content);
+    parsed = JSON.parse(cleaned);
   } catch {
     return [];
   }
@@ -337,20 +348,23 @@ async function processSource(source: { id: string; name: string; url: string }) 
     events = await extractWithLlama(source.name, source.url, html);
     const todayStr = new Date().toISOString().slice(0, 10);
     for (const ev of events) {
-      // Quality gate: confidence >= 0.6 (lowered from 0.7 for higher recall)
-      if (ev.confidence < 0.6) { skipped++; continue; }
-      // Must have at least a deadline OR a start_date
-      if (!ev.deadline && !ev.start_date) { skipped++; continue; }
-      // Reject past events
+      // Quality gate: confidence >= 0.4 (relaxed for higher recall on KZ sources)
+      if (ev.confidence < 0.4) { skipped++; continue; }
+      // Reject past events when date present
       if (ev.deadline && ev.deadline < todayStr) { skipped++; continue; }
       if (!ev.deadline && ev.start_date && ev.start_date < todayStr) { skipped++; continue; }
-      // Must have a registration URL with a path beyond just the domain (not the bare landing page)
+      // Default deadline: 60 days out if neither date present (gives time to apply / explore)
+      if (!ev.deadline && !ev.start_date) {
+        const d = new Date();
+        d.setDate(d.getDate() + 60);
+        ev.deadline = d.toISOString().slice(0, 10);
+      }
+      // Must have a registration URL — accept any valid URL (even bare landing page is better than nothing)
       if (!ev.external_url) { skipped++; continue; }
       try {
-        const parsed = new URL(ev.external_url);
-        if (!parsed.pathname || parsed.pathname === '/' || parsed.pathname === '') { skipped++; continue; }
+        new URL(ev.external_url);
       } catch { skipped++; continue; }
-      // Title quality: at least 8 chars, no "Breaking news" clickbait signals
+      // Title quality
       if (!ev.title || ev.title.length < 8) { skipped++; continue; }
       if (await isDuplicate(ev)) { skipped++; continue; }
       const { error } = await supa.from('events').insert({
