@@ -45,9 +45,20 @@ export default function Catalog() {
     return cs;
   }, [events]);
 
+  // KZ priority: events tied to Kazakhstan get sorted to the top.
+  const KZ_CITIES = ['алматы','astana','astana','астана','алматы','almaty','шымкент','shymkent','караганда','karaganda','аktobe','актобе','павлодар','pavlodar','оскемен','усть-каменогорск','semey','семей','тараз','taraz','кокшетау','kokshetau','туркестан','turkestan','atyrau','атырау','актау','aktau','уральск','uralsk','костанай','kostanay','кызылорда','kyzylorda'];
+  const KZ_KEYWORDS = ['казахст','kazakh','astana hub','bolashak','болашак','techorda','jusan','kimep','nazarbayev','назарбаев','almau','satbayev','сатбаев','kazguu','казгюу','nis','нис','astana','алматы','almaty','astana','tsarka','workitkz','workit','грантс','grants.kz','қазақ','kz '];
+  const isKzEvent = (e) => {
+    const city = (e.city || '').toLowerCase().trim();
+    if (KZ_CITIES.some(c => city === c || city.includes(c))) return true;
+    const hay = [e.title, e.organization_name, e.description, e.short_description, (e.tags || []).join(' ')]
+      .filter(Boolean).join(' ').toLowerCase();
+    return KZ_KEYWORDS.some(kw => hay.includes(kw));
+  };
+
   const filtered = useMemo(() => {
     const todayStr = new Date().toISOString().slice(0, 10);
-    return events.filter(e => {
+    const result = events.filter(e => {
       // Hide expired events (belt-and-braces; daily cron also cleans them up in DB)
       if (e.deadline && e.deadline < todayStr) return false;
       // Hide AI-discovered events that lack a registration URL — they're unusable
@@ -63,6 +74,13 @@ export default function Catalog() {
         if (!hay.includes(q)) return false;
       }
       return true;
+    });
+    // Sort: KZ-relevant first, then by created_date DESC
+    return result.sort((a, b) => {
+      const aKz = isKzEvent(a) ? 1 : 0;
+      const bKz = isKzEvent(b) ? 1 : 0;
+      if (aKz !== bKz) return bKz - aKz;
+      return new Date(b.created_date || 0) - new Date(a.created_date || 0);
     });
   }, [events, search, category, format, city]);
 
