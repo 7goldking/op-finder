@@ -29,6 +29,9 @@ const Onboarding = lazy(() => import('@/pages/Onboarding'));
 const AIChat = lazy(() => import('@/pages/AIChat'));
 const OrgDashboard = lazy(() => import('@/pages/OrgDashboard'));
 const AdminDiscovery = lazy(() => import('@/pages/AdminDiscovery'));
+const AdminModeration = lazy(() => import('@/pages/AdminModeration'));
+const AdminSourceHealth = lazy(() => import('@/pages/AdminSourceHealth'));
+const Submit = lazy(() => import('@/pages/Submit'));
 const CreateEvent = lazy(() => import('@/pages/CreateEvent'));
 const OrgApplications = lazy(() => import('@/pages/OrgApplications'));
 const Mentors = lazy(() => import('@/pages/Mentors'));
@@ -89,6 +92,9 @@ const AuthenticatedApp = () => {
           <Route path="/assistant" element={<PageTransition><AIChat /></PageTransition>} />
           <Route path="/org" element={<PageTransition><OrgDashboard /></PageTransition>} />
           <Route path="/admin/discovery" element={<PageTransition><AdminDiscovery /></PageTransition>} />
+          <Route path="/admin/moderation" element={<PageTransition><AdminModeration /></PageTransition>} />
+          <Route path="/admin/sources" element={<PageTransition><AdminSourceHealth /></PageTransition>} />
+          <Route path="/submit" element={<PageTransition><Submit /></PageTransition>} />
           <Route path="/org/event/new" element={<PageTransition><CreateEvent /></PageTransition>} />
           <Route path="/org/event/:id/edit" element={<PageTransition><CreateEvent /></PageTransition>} />
           <Route path="/org/event/:eventId/applications" element={<PageTransition><OrgApplications /></PageTransition>} />

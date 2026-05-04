@@ -56,6 +56,47 @@ function inferCategoryFromTitle(title: string, fallback: string): string {
   return fallback;
 }
 
+// Cheap pre-filter: only keep posts that look like opportunities. Cuts ~80%+ of
+// low-signal posts (memes, news, photo dumps) before paying for LLM extraction.
+const OPP_KEYWORDS = [
+  'грант', 'стипенди', 'стажиров', 'конкурс', 'хакатон',
+  'олимпиад', 'форум', 'вакансия', 'подача', 'дедлайн',
+  'волонтер', 'обмен', 'феллоушип', 'летняя школ',
+  'apply', 'deadline', 'fellowship', 'scholarship', 'internship',
+  'hackathon', 'competition', 'grant ', 'grants ', 'mentorship',
+  'application form', 'submit your', 'register now', 'open call',
+];
+function looksLikeOpportunity(text: string): boolean {
+  const t = text.toLowerCase();
+  let hits = 0;
+  for (const k of OPP_KEYWORDS) {
+    if (t.includes(k)) {
+      hits++;
+      if (hits >= 1) return true; // a single hit is enough
+    }
+  }
+  // Strong intent words always pass
+  return /(register|apply now|подать заяв|регистраци|deadline)/i.test(text);
+}
+
+// Strip tracking params, lowercase host, drop fragment, drop trailing slash.
+// Two URLs that differ only by utm/fbclid/ref/gclid resolve to the same canonical.
+const TRACKING_PREFIXES = ['utm_', 'fbclid', 'gclid', 'mc_eid', 'mc_cid', 'ref', 'ref_', 'igshid'];
+function canonicalUrl(input: string): string {
+  try {
+    const u = new URL(input);
+    const params = [...u.searchParams.entries()].filter(([k]) => {
+      const lk = k.toLowerCase();
+      return !TRACKING_PREFIXES.some((p) => lk === p || lk.startsWith(p));
+    });
+    const search = params.length ? '?' + params.map(([k, v]) => `${k}=${v}`).join('&') : '';
+    const path = u.pathname.replace(/\/+$/, '') || '/';
+    return `${u.protocol.toLowerCase()}//${u.host.toLowerCase()}${path}${search}`;
+  } catch {
+    return input;
+  }
+}
+
 async function fetchSource(url: string): Promise<string> {
   const r = await fetch(url, {
     headers: {
@@ -69,9 +110,9 @@ async function fetchSource(url: string): Promise<string> {
 
   // Telegram /s/ preview pages — extract individual posts with link + datetime so
   // Llama sees structured channel feed, not garbled HTML soup.
+  // Pre-filter posts by keyword presence: only opportunity-shaped posts go to LLM.
   if (url.startsWith('https://t.me/s/') || url.startsWith('http://t.me/s/')) {
     const posts: string[] = [];
-    // <div class="tgme_widget_message_text" ...>...</div>
     const msgRe = /<div class="tgme_widget_message_wrap[\s\S]*?<a class="tgme_widget_message_date"[^>]*href="(https?:\/\/t\.me\/[^\"]+)"[\s\S]*?<time[^>]*datetime="([^"]+)"[\s\S]*?<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<div class="tgme_widget_message_footer/g;
     let m: RegExpExecArray | null;
     while ((m = msgRe.exec(html)) !== null) {
@@ -84,7 +125,7 @@ async function fetchSource(url: string): Promise<string> {
         .replace(/&nbsp;|&amp;|&lt;|&gt;|&quot;|&#39;/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
-      if (text.length > 30) {
+      if (text.length > 80 && looksLikeOpportunity(text)) {
         posts.push(`[POST ${posts.length + 1} · ${date}]\nURL: ${link}\n${text.slice(0, 1200)}`);
       }
       if (posts.length >= 20) break;
@@ -310,8 +351,17 @@ function validUrl(u: any, base: string): string {
   }
 }
 
-async function isDuplicate(ev: ExtractedEvent): Promise<boolean> {
-  // Check by external_url first (fastest)
+async function isDuplicate(ev: ExtractedEvent, canonical: string): Promise<boolean> {
+  // Layer 1: canonical_url match (fastest, indexed)
+  if (canonical) {
+    const { data } = await supa
+      .from('events')
+      .select('id')
+      .eq('canonical_url', canonical)
+      .limit(1);
+    if (data && data.length > 0) return true;
+  }
+  // Layer 2: legacy external_url (catches pre-canonical rows)
   if (ev.external_url) {
     const { data } = await supa
       .from('events')
@@ -320,7 +370,7 @@ async function isDuplicate(ev: ExtractedEvent): Promise<boolean> {
       .limit(1);
     if (data && data.length > 0) return true;
   }
-  // Then by title similarity (case-insensitive exact)
+  // Layer 3: title similarity (case-insensitive exact)
   const { data: byTitle } = await supa
     .from('events')
     .select('id')
@@ -366,7 +416,8 @@ async function processSource(source: { id: string; name: string; url: string }) 
       } catch { skipped++; continue; }
       // Title quality
       if (!ev.title || ev.title.length < 8) { skipped++; continue; }
-      if (await isDuplicate(ev)) { skipped++; continue; }
+      const canonical = canonicalUrl(ev.external_url);
+      if (await isDuplicate(ev, canonical)) { skipped++; continue; }
       const { error } = await supa.from('events').insert({
         title: ev.title,
         short_description: ev.short_description,
@@ -382,6 +433,7 @@ async function processSource(source: { id: string; name: string; url: string }) 
         deadline: ev.deadline,
         tags: ev.tags,
         external_url: ev.external_url,
+        canonical_url: canonical,
         discovery_source: 'ai-agent',
         ai_confidence: ev.confidence,
         ai_raw_data: ev as any,
@@ -389,14 +441,47 @@ async function processSource(source: { id: string; name: string; url: string }) 
       });
       if (!error) inserted++;
     }
-    // Update source stats
+    // Update source stats + per-source schedule
+    const scheduleMin = (source as any).schedule_min ?? 360;
+    const nextRun = new Date(Date.now() + scheduleMin * 60_000).toISOString();
     await supa
       .from('discovery_sources')
-      .update({ last_scanned_at: new Date().toISOString(), events_found_total: events.length })
+      .update({
+        last_scanned_at: new Date().toISOString(),
+        events_found_total: events.length,
+        next_run_at: nextRun,
+        consecutive_fails: 0,
+      })
       .eq('id', source.id);
   } catch (e: any) {
     errMsg = e.message?.slice(0, 1000) ?? String(e);
+    // back off failing source: schedule next run further out
+    const fails = ((source as any).consecutive_fails ?? 0) + 1;
+    const backoffMin = Math.min(60 * 24, 30 * Math.pow(2, fails - 1)); // 30, 60, 120, 240, ... cap 24h
+    const nextRun = new Date(Date.now() + backoffMin * 60_000).toISOString();
+    await supa
+      .from('discovery_sources')
+      .update({
+        last_scanned_at: new Date().toISOString(),
+        next_run_at: nextRun,
+        consecutive_fails: fails,
+        // auto-disable after 8 consecutive fails to stop wasting cycles
+        enabled: fails >= 8 ? false : (source as any).enabled ?? true,
+      })
+      .eq('id', source.id);
   }
+
+  // Update source_health snapshot
+  await supa.from('source_health').upsert({
+    source_id: source.id,
+    last_run_at: new Date().toISOString(),
+    last_success_at: errMsg ? null : new Date().toISOString(),
+    last_error: errMsg,
+    consecutive_fails: errMsg ? ((source as any).consecutive_fails ?? 0) + 1 : 0,
+    items_24h: events.length,
+    inserted_24h: inserted,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'source_id' });
 
   if (runId) {
     await supa
@@ -422,8 +507,18 @@ serve(async (req) => {
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const sourceIdFilter: string | undefined = body.source_id;
 
-    let q = supa.from('discovery_sources').select('id,name,url').eq('enabled', true);
-    if (sourceIdFilter) q = q.eq('id', sourceIdFilter);
+    // Honour next_run_at unless caller explicitly requests a run-now or specific source.
+    const runAll: boolean = body.run_all === true;
+    let q = supa.from('discovery_sources')
+      .select('id,name,url,schedule_min,consecutive_fails,enabled')
+      .eq('enabled', true);
+    if (sourceIdFilter) {
+      q = q.eq('id', sourceIdFilter);
+    } else if (!runAll) {
+      // Only sources due now (next_run_at null or in the past)
+      q = q.or('next_run_at.is.null,next_run_at.lte.' + new Date().toISOString());
+      q = q.limit(20);
+    }
     const { data: sources, error } = await q;
 
     if (error) throw error;
@@ -440,7 +535,7 @@ serve(async (req) => {
       const r = await processSource(s as any);
       results.push(r);
       if (i < sources.length - 1) {
-        await new Promise((res) => setTimeout(res, 20000));
+        await new Promise((res) => setTimeout(res, 5000));
       }
     }
 
