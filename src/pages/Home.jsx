@@ -37,10 +37,31 @@ export default function Home() {
   const CATEGORIES = getCategories(lang);
 
   useEffect(() => {
-    base44.entities.Event.filter({ status: 'published' }, '-created_date', 6)
-      .then(setEvents)
-      .finally(() => setLoading(false));
-  }, []);
+    // Try personalized feed first (uses user bookmarks centroid + recency).
+    // Falls back to recent on any error.
+    supabase
+      .rpc('personalized_feed', { p_limit: 6 })
+      .then(({ data, error }) => {
+        if (data && data.length && !error) {
+          // Normalize RPC field names to EventCard's expected aliases
+          setEvents(data.map((e) => ({
+            ...e,
+            application_deadline: e.deadline,
+            cover_url: e.cover_image_url,
+          })));
+          setLoading(false);
+        } else {
+          base44.entities.Event.filter({ status: 'published' }, '-created_date', 6)
+            .then(setEvents)
+            .finally(() => setLoading(false));
+        }
+      })
+      .catch(() => {
+        base44.entities.Event.filter({ status: 'published' }, '-created_date', 6)
+          .then(setEvents)
+          .finally(() => setLoading(false));
+      });
+  }, [user?.email]);
 
   // Capture referral code from URL (?ref=...) and store it
   useEffect(() => {

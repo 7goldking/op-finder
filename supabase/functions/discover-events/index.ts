@@ -351,7 +351,37 @@ function validUrl(u: any, base: string): string {
   }
 }
 
-async function isDuplicate(ev: ExtractedEvent, canonical: string): Promise<boolean> {
+async function generateEmbedding(text: string): Promise<number[] | null> {
+  // CF Workers AI bge-m3: multilingual (RU/EN/KZ), 1024 dims, free in CF Paid plan.
+  const cfAccountId = Deno.env.get('CLOUDFLARE_ACCOUNT_ID');
+  const cfToken = Deno.env.get('CLOUDFLARE_AI_TOKEN');
+  if (!cfAccountId || !cfToken) return null;
+  try {
+    const r = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/@cf/baai/bge-m3`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${cfToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: [text.slice(0, 4000)] }),
+      },
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const v = data?.result?.data?.[0];
+    return Array.isArray(v) && v.length === 1024 ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+async function isDuplicate(
+  ev: ExtractedEvent,
+  canonical: string,
+  embedding: number[] | null,
+): Promise<boolean> {
   // Layer 1: canonical_url match (fastest, indexed)
   if (canonical) {
     const { data } = await supa
@@ -370,7 +400,16 @@ async function isDuplicate(ev: ExtractedEvent, canonical: string): Promise<boole
       .limit(1);
     if (data && data.length > 0) return true;
   }
-  // Layer 3: title similarity (case-insensitive exact)
+  // Layer 3: semantic dedup via pgvector (cosine sim > 0.92, last 90 days)
+  if (embedding) {
+    const { data } = await supa.rpc('find_semantic_duplicate', {
+      p_embedding: embedding,
+      p_threshold: 0.92,
+      p_days: 90,
+    });
+    if (data) return true;
+  }
+  // Layer 4: title similarity (case-insensitive exact)
   const { data: byTitle } = await supa
     .from('events')
     .select('id')
@@ -417,7 +456,9 @@ async function processSource(source: { id: string; name: string; url: string }) 
       // Title quality
       if (!ev.title || ev.title.length < 8) { skipped++; continue; }
       const canonical = canonicalUrl(ev.external_url);
-      if (await isDuplicate(ev, canonical)) { skipped++; continue; }
+      const embedText = `${ev.title}\n\n${ev.short_description || ''}\n\n${(ev.description || '').slice(0, 1500)}`;
+      const embedding = await generateEmbedding(embedText);
+      if (await isDuplicate(ev, canonical, embedding)) { skipped++; continue; }
       const { error } = await supa.from('events').insert({
         title: ev.title,
         short_description: ev.short_description,
@@ -434,6 +475,7 @@ async function processSource(source: { id: string; name: string; url: string }) 
         tags: ev.tags,
         external_url: ev.external_url,
         canonical_url: canonical,
+        embedding: embedding as any,
         discovery_source: 'ai-agent',
         ai_confidence: ev.confidence,
         ai_raw_data: ev as any,
