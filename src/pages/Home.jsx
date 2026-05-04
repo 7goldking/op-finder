@@ -23,13 +23,13 @@ export default function Home() {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('organizations').select('*', { count: 'exact', head: true }),
-      supabase.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
-    ]).then(([u, o, e]) => {
-      if (!alive) return;
-      setStats({ users: u.count ?? 0, orgs: o.count ?? 0, events: e.count ?? 0 });
+    supabase.rpc('get_platform_stats').then(({ data }) => {
+      if (!alive || !data) return;
+      setStats({
+        users: data.users ?? 0,
+        orgs: data.orgs ?? 0,
+        events: data.events ?? 0,
+      });
     }).catch(() => {});
     return () => { alive = false; };
   }, []);
