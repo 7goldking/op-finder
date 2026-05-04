@@ -82,6 +82,11 @@ const DICT = {
     'home.ctaDesc': 'Публикуй события, управляй заявками и отслеживай аналитику — всё в одном месте.',
     'home.ctaBtn': 'Открыть каталог событий',
     'home.orgs': 'Организации',
+    'home.statsTitle': 'Платформа в цифрах',
+    'home.statsDesc': 'Живое комьюнити Казахстана и мира',
+    'home.statsUsers': 'Пользователей',
+    'home.statsOrgs': 'Организаций',
+    'home.statsEvents': 'Возможностей',
 
     // Ambassador banner
     'ambassador.kicker': 'Организация',
@@ -475,6 +480,11 @@ const DICT = {
     'home.ctaTitle': 'Representing an organization?',
     'home.ctaDesc': 'Publish events, manage applications, and track analytics — all in one place.',
     'home.ctaBtn': 'Open event catalog',
+    'home.statsTitle': 'Platform in numbers',
+    'home.statsDesc': 'Living community across Kazakhstan and the world',
+    'home.statsUsers': 'Users',
+    'home.statsOrgs': 'Organizations',
+    'home.statsEvents': 'Opportunities',
     'home.orgs': 'Organizations',
 
     // Ambassador banner
@@ -862,6 +872,11 @@ const DICT = {
     'home.ctaTitle': 'Сен ұйымды білесiң бе?',
     'home.ctaDesc': 'Оқиғаларды жарияла, өтініштерді басқар және аналитиканы бақыла - бәрi бiр жерде.',
     'home.ctaBtn': 'Оқиғалар каталогын ашу',
+    'home.statsTitle': 'Платформа сандармен',
+    'home.statsDesc': 'Қазақстан мен әлем бойынша белсенді қоғамдастық',
+    'home.statsUsers': 'Қолданушылар',
+    'home.statsOrgs': 'Ұйымдар',
+    'home.statsEvents': 'Мүмкіндіктер',
     'home.orgs': 'Ұйымдар',
     'ambassador.kicker': 'Ұйым',
     'ambassador.title': 'KazYouthDiplomacy',
