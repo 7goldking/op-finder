@@ -103,6 +103,7 @@ export default function Layout() {
     { to: '/teams', label: t('nav.teams'), icon: Users },
     { to: '/chat', label: t('nav.messages'), icon: MessageCircle },
     { to: '/friend-requests', label: t('nav.friend_requests'), icon: Heart },
+    { to: '/submit', label: t('nav.submit'), icon: Sparkles },
     { to: '/dashboard', label: t('nav.dashboard'), icon: UserIcon },
   ];
 

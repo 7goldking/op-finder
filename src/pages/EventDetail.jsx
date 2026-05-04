@@ -8,6 +8,7 @@ import EventReviews from '@/components/EventReviews';
 import AddToCalendar from '@/components/AddToCalendar';
 import PushNotificationsToggle from '@/components/PushNotificationsToggle';
 import TeamFinder from '@/components/TeamFinder';
+import SimilarEvents from '@/components/SimilarEvents';
 import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { getCategory, daysUntil, getLevels, getFormats } from '@/lib/categories';
@@ -225,6 +226,9 @@ export default function EventDetail() {
           {['hackathon', 'competition'].includes(event.category) && (
             <TeamFinder event={event} user={user} />
           )}
+
+          {/* Similar events (pgvector) */}
+          <SimilarEvents eventId={event.id} />
 
           {/* Reviews */}
           <div className="pt-4 border-t border-border">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/api/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import HeroEventFeed from '@/components/HeroEventFeed';
@@ -18,14 +19,49 @@ export default function Home() {
   const { user } = useOutletContext() || {};
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ users: null, orgs: null, events: null });
+
+  useEffect(() => {
+    let alive = true;
+    supabase.rpc('get_platform_stats').then(({ data }) => {
+      if (!alive || !data) return;
+      setStats({
+        users: data.users ?? 0,
+        orgs: data.orgs ?? 0,
+        events: data.events ?? 0,
+      });
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
   const { t, lang } = useI18n();
   const CATEGORIES = getCategories(lang);
 
   useEffect(() => {
-    base44.entities.Event.filter({ status: 'published' }, '-created_date', 6)
-      .then(setEvents)
-      .finally(() => setLoading(false));
-  }, []);
+    // Try personalized feed first (uses user bookmarks centroid + recency).
+    // Falls back to recent on any error.
+    supabase
+      .rpc('personalized_feed', { p_limit: 6 })
+      .then(({ data, error }) => {
+        if (data && data.length && !error) {
+          // Normalize RPC field names to EventCard's expected aliases
+          setEvents(data.map((e) => ({
+            ...e,
+            application_deadline: e.deadline,
+            cover_url: e.cover_image_url,
+          })));
+          setLoading(false);
+        } else {
+          base44.entities.Event.filter({ status: 'published' }, '-created_date', 6)
+            .then(setEvents)
+            .finally(() => setLoading(false));
+        }
+      })
+      .catch(() => {
+        base44.entities.Event.filter({ status: 'published' }, '-created_date', 6)
+          .then(setEvents)
+          .finally(() => setLoading(false));
+      });
+  }, [user?.email]);
 
   // Capture referral code from URL (?ref=...) and store it
   useEffect(() => {
@@ -110,6 +146,27 @@ export default function Home() {
         </div>
       </section>
       </InfiniteGrid>
+
+      {/* Platform stats */}
+      <section className="max-w-7xl mx-auto px-4 md:px-8 pt-4 md:pt-6 pb-2">
+        <div className="grid grid-cols-3 gap-3 md:gap-5">
+          {[
+            { key: 'users', label: t('home.statsUsers'), value: stats.users },
+            { key: 'orgs', label: t('home.statsOrgs'), value: stats.orgs },
+            { key: 'events', label: t('home.statsEvents'), value: stats.events },
+          ].map((s) => (
+            <div
+              key={s.key}
+              className="rounded-2xl border border-border bg-card px-4 py-5 md:px-6 md:py-6 text-center md:text-left"
+            >
+              <div className="font-display text-3xl md:text-5xl font-semibold tabular-nums leading-none">
+                {s.value === null ? '—' : s.value.toLocaleString('ru-RU')}
+              </div>
+              <div className="text-xs md:text-sm text-muted-foreground mt-2">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Organizations marquee */}
       <OrgMarquee label={t('home.orgs')} />
