@@ -4,7 +4,7 @@ import { auth } from '@/api/auth';
 import {
   Home, Compass, Sparkles, User as UserIcon, Briefcase, LogOut,
   ArrowLeft, Sun, Moon, GraduationCap, BookOpen, MessageCircle,
-  Users, Search, Heart, Zap, ChevronLeft, ChevronRight,
+  Users, Search, Heart, Zap, ChevronLeft, ChevronRight, Bell,
   PanelLeftClose, PanelRightClose, PanelLeftOpen, PanelRightOpen
 } from 'lucide-react';
 import { MenuCloseIcon } from '@/components/ui/animated-state-icons';
@@ -394,40 +394,48 @@ export default function Layout() {
         </AnimatePresence>
       </div>
 
-      {/* Mobile bottom nav — matches op_finder_mobile_bw.html mockup */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 10px)' }}>
-        <div className="flex items-stretch pt-2 px-0">
-          {topNav.slice(0, 5).map((item) => {
-            const active = isActive(item.to);
-            const dest = tabPaths.current[item.to] || item.to;
-            return (
-              <Link
-                key={item.to}
-                to={dest}
-                aria-label={item.label}
-                className={cn(
-                  "flex flex-col items-center gap-[3px] flex-1 pb-1 active:scale-95 transition-transform",
-                  active ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                <item.icon className={cn("w-[22px] h-[22px]", active ? "stroke-[2]" : "stroke-[1.8]")} strokeWidth={active ? 2 : 1.8} />
-                <span className={cn("text-[10px] leading-none", active ? "font-semibold text-foreground" : "font-medium")}>{item.label}</span>
-              </Link>
-            );
-          })}
-          {/* More button opens mobile menu */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={cn(
-              "flex flex-col items-center gap-[3px] flex-1 pb-1 active:scale-95 transition-transform",
-              mobileMenuOpen ? "text-foreground" : "text-muted-foreground"
-            )}
-          >
-            <MenuCloseIcon size={22} active={mobileMenuOpen} />
-            <span className={cn("text-[10px] leading-none", mobileMenuOpen ? "font-semibold text-foreground" : "font-medium")}>{t('sidebar.more')}</span>
-          </button>
-        </div>
-      </nav>
+      {/* Mobile bottom nav — exactly 5 items matching op_finder_mobile_bw.html mockup */}
+      {(() => {
+        const mobileBottomNav = isOrg
+          ? [
+              { to: '/org', label: t('nav.panel'), icon: Briefcase },
+              { to: '/catalog', label: t('nav.catalog'), icon: Compass },
+              { to: '/assistant', label: 'AI', icon: Sparkles },
+              { to: '/activity', label: t('nav.activity'), icon: Bell },
+              { to: '/dashboard', label: t('nav.profile'), icon: UserIcon },
+            ]
+          : [
+              { to: '/home', label: t('nav.home'), icon: Home },
+              { to: '/catalog', label: t('nav.catalog'), icon: Compass },
+              { to: '/assistant', label: 'AI', icon: Sparkles },
+              { to: '/activity', label: t('nav.activity'), icon: Bell },
+              { to: '/dashboard', label: t('nav.profile'), icon: UserIcon },
+            ];
+        return (
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 14px)' }}>
+            <div className="flex items-stretch pt-2.5 px-0">
+              {mobileBottomNav.map((item) => {
+                const active = isActive(item.to);
+                const dest = tabPaths.current[item.to] || item.to;
+                return (
+                  <Link
+                    key={item.to}
+                    to={dest}
+                    aria-label={item.label}
+                    className={cn(
+                      "flex flex-col items-center gap-[3px] flex-1 active:scale-95 transition-transform",
+                      active ? "text-foreground" : "text-muted-foreground/80"
+                    )}
+                  >
+                    <item.icon className="w-[22px] h-[22px]" strokeWidth={active ? 2 : 1.8} />
+                    <span className={cn("text-[10px] leading-none", active ? "font-semibold text-foreground" : "font-medium")}>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        );
+      })()}
     </div>
   );
 }

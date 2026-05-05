@@ -11,6 +11,7 @@ import { getCategory, daysUntil } from '@/lib/categories';
 import { motion } from 'framer-motion';
 import FriendsCard from '@/components/FriendsCard';
 import Recommendations from '@/components/Recommendations';
+import MobileProfile from '@/components/MobileProfile';
 import { useI18n } from '@/lib/i18n';
 
 export default function Dashboard() {
@@ -42,8 +43,14 @@ export default function Dashboard() {
   const dateLocale = lang === 'en' ? enUS : ru;
 
   return (
+    <>
+    {/* Mobile-only profile hub (matches op_finder_mobile_bw.html mockup). Desktop below unchanged. */}
+    <div className="md:hidden">
+      <MobileProfile user={user} />
+    </div>
     <PullToRefresh onRefresh={fetchData}>
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
+    <div className="hidden md:block max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
+      
       {/* Header */}
       <div className="mb-10 flex items-start justify-between flex-wrap gap-4">
         <div>
@@ -163,6 +170,7 @@ export default function Dashboard() {
       )}
     </div>
     </PullToRefresh>
+    </>
   );
 }
 
