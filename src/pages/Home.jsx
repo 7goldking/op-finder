@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import HeroEventFeed from '@/components/HeroEventFeed';
 import EventCard from '@/components/EventCard';
+import MobileHome from '@/components/MobileHome';
 import OrgMarquee from '@/components/OrgMarquee';
 import AmbassadorBanner from '@/components/AmbassadorBanner';
 import { getCategories } from '@/lib/categories';
@@ -92,6 +93,12 @@ export default function Home() {
 
   return (
     <div>
+      {/* Mobile-only home (matches B&W mockup). Desktop below unchanged. */}
+      <div className="md:hidden">
+        <MobileHome />
+      </div>
+
+      <div className="hidden md:block">
       {/* Hero */}
       <InfiniteGrid>
       <section className="relative overflow-hidden">
@@ -252,6 +259,7 @@ export default function Home() {
           <div className="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-primary-foreground/5 blur-3xl" />
         </div>
       </section>
+      </div>
     </div>
   );
 }

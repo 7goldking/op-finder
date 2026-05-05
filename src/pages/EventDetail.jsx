@@ -9,6 +9,7 @@ import AddToCalendar from '@/components/AddToCalendar';
 import PushNotificationsToggle from '@/components/PushNotificationsToggle';
 import TeamFinder from '@/components/TeamFinder';
 import SimilarEvents from '@/components/SimilarEvents';
+import MobileEventDetail from '@/components/MobileEventDetail';
 import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { getCategory, daysUntil, getLevels, getFormats } from '@/lib/categories';
@@ -104,8 +105,27 @@ export default function EventDetail() {
     </div>;
   }
 
+  const isExternal = event.discovery_source === 'ai-agent' || !event.organization_id;
+
   return (
-    <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8">
+    <>
+    {/* Mobile-only detail (matches B&W mockup). Desktop below unchanged. */}
+    <div className="md:hidden">
+      <MobileEventDetail
+        event={event}
+        hasApplied={hasApplied}
+        past={past}
+        bookmarked={bookmarked}
+        onToggleBookmark={toggleBookmark}
+        onShare={share}
+        onApply={() => navigate(`/event/${id}/apply`)}
+        isExternal={isExternal}
+        externalUrl={event.external_url}
+        tx={tx}
+      />
+    </div>
+
+    <div className="hidden md:block max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8">
       <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="w-4 h-4" /> {lang === 'en' ? 'Back' : 'Назад'}
       </button>
@@ -331,6 +351,7 @@ export default function EventDetail() {
         </aside>
       </div>
     </div>
+    </>
   );
 }
 

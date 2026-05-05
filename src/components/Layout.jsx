@@ -394,9 +394,9 @@ export default function Layout() {
         </AnimatePresence>
       </div>
 
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        <div className="flex items-center justify-around h-16 px-2">
+      {/* Mobile bottom nav — matches op_finder_mobile_bw.html mockup */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 10px)' }}>
+        <div className="flex items-stretch pt-2 px-0">
           {topNav.slice(0, 5).map((item) => {
             const active = isActive(item.to);
             const dest = tabPaths.current[item.to] || item.to;
@@ -406,12 +406,12 @@ export default function Layout() {
                 to={dest}
                 aria-label={item.label}
                 className={cn(
-                  "flex flex-col items-center gap-1 flex-1 py-2 rounded-lg transition-colors active:scale-95",
+                  "flex flex-col items-center gap-[3px] flex-1 pb-1 active:scale-95 transition-transform",
                   active ? "text-foreground" : "text-muted-foreground"
                 )}
               >
-                <item.icon className={cn("w-5 h-5 transition-transform", active && "scale-110")} />
-                <span className="text-xs font-medium tracking-wide">{item.label}</span>
+                <item.icon className={cn("w-[22px] h-[22px]", active ? "stroke-[2]" : "stroke-[1.8]")} strokeWidth={active ? 2 : 1.8} />
+                <span className={cn("text-[10px] leading-none", active ? "font-semibold text-foreground" : "font-medium")}>{item.label}</span>
               </Link>
             );
           })}
@@ -419,12 +419,12 @@ export default function Layout() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className={cn(
-              "flex flex-col items-center gap-1 flex-1 py-2 rounded-lg transition-colors active:scale-95",
+              "flex flex-col items-center gap-[3px] flex-1 pb-1 active:scale-95 transition-transform",
               mobileMenuOpen ? "text-foreground" : "text-muted-foreground"
             )}
           >
-            <MenuCloseIcon size={20} active={mobileMenuOpen} />
-            <span className="text-xs font-medium tracking-wide">{t('sidebar.more')}</span>
+            <MenuCloseIcon size={22} active={mobileMenuOpen} />
+            <span className={cn("text-[10px] leading-none", mobileMenuOpen ? "font-semibold text-foreground" : "font-medium")}>{t('sidebar.more')}</span>
           </button>
         </div>
       </nav>
