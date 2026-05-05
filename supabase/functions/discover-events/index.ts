@@ -418,7 +418,7 @@ async function isDuplicate(
   return !!(byTitle && byTitle.length > 0);
 }
 
-async function processSource(source: { id: string; name: string; url: string }) {
+async function processSource(source: { id: string; name: string; url: string }, prefetchedText?: string) {
   const runStart = await supa
     .from('discovery_runs')
     .insert({ source_id: source.id, status: 'running' })
@@ -433,7 +433,11 @@ async function processSource(source: { id: string; name: string; url: string }) 
   let skipped = 0;
 
   try {
-    html = await fetchSource(source.url);
+    // Prefetched text path: external worker (e.g. Telethon for Telegram) fetched
+    // the raw posts already and is passing them inline. Skip HTTP fetch.
+    html = prefetchedText && prefetchedText.length > 0
+      ? prefetchedText.slice(0, 12000)
+      : await fetchSource(source.url);
     events = await extractWithLlama(source.name, source.url, html);
     const todayStr = new Date().toISOString().slice(0, 10);
     for (const ev of events) {
@@ -548,6 +552,7 @@ serve(async (req) => {
   try {
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const sourceIdFilter: string | undefined = body.source_id;
+    const prefetchedText: string | undefined = body.prefetched_text;
 
     // Honour next_run_at unless caller explicitly requests a run-now or specific source.
     const runAll: boolean = body.run_all === true;
@@ -574,7 +579,11 @@ serve(async (req) => {
     const results = [];
     for (let i = 0; i < sources.length; i++) {
       const s = sources[i];
-      const r = await processSource(s as any);
+      // Only the explicitly-requested single source can use prefetched_text
+      const useText = prefetchedText && sourceIdFilter && s.id === sourceIdFilter
+        ? prefetchedText
+        : undefined;
+      const r = await processSource(s as any, useText);
       results.push(r);
       if (i < sources.length - 1) {
         await new Promise((res) => setTimeout(res, 5000));
