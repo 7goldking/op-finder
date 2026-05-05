@@ -40,7 +40,7 @@ export default function MobileEventCard({ event }) {
   return (
     <Link
       to={`/event/${event.id}`}
-      className="block rounded-[14px] bg-secondary p-4 active:opacity-80 transition"
+      className="block rounded-[14px] bg-secondary px-4 py-3.5 active:opacity-80 transition"
     >
       <div className="flex items-start justify-between mb-2 gap-2">
         <div className="flex flex-wrap gap-1.5 min-w-0">
