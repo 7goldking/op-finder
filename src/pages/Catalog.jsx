@@ -86,10 +86,10 @@ export default function Catalog() {
 
   return (
     <PullToRefresh onRefresh={fetchEvents}>
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-12">
-      <div className="mb-6 md:mb-8">
-        <h1 className="font-display text-3xl md:text-5xl font-semibold mb-2">{t('catalog.title')}</h1>
-        <p className="text-sm md:text-base text-muted-foreground">{t('catalog.subtitle')}</p>
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 md:py-12 pb-24 md:pb-12">
+      <div className="mb-3 md:mb-8 px-1 md:px-0">
+        <h1 className="text-[22px] leading-tight tracking-tight font-bold md:font-display md:text-5xl md:font-semibold mb-1 md:mb-2">{t('catalog.title')}</h1>
+        <p className="text-[13px] md:text-base text-muted-foreground">{t('catalog.subtitle')}</p>
       </div>
 
       <div className="mb-6 md:mb-8">

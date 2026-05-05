@@ -8,6 +8,7 @@ import { ru, enUS } from 'date-fns/locale';
 import { getCategory, daysUntil, getFormats } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import BookmarkButton from '@/components/BookmarkButton';
+import MobileEventCard from '@/components/MobileEventCard';
 import { useI18n } from '@/lib/i18n';
 
 export default function EventCard({ event, index = 0 }) {
@@ -18,10 +19,16 @@ export default function EventCard({ event, index = 0 }) {
   const past = days !== null && days < 0;
 
   return (
+    <>
+    {/* Mobile-only card — matches B&W mockup. Desktop version below (md:block). */}
+    <div className="md:hidden">
+      <MobileEventCard event={event} />
+    </div>
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.3), ease: [0.22, 1, 0.36, 1] }}
+      className="hidden md:block"
     >
       <Link to={`/event/${event.id}`} className="group block">
         <article className="relative bg-card border border-border rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.12)] transition-all duration-300">
@@ -97,5 +104,6 @@ export default function EventCard({ event, index = 0 }) {
         </article>
       </Link>
     </motion.div>
+    </>
   );
 }
